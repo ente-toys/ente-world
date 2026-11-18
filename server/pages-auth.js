@@ -80,7 +80,7 @@ async function upgrade(env, roomRequest, original, key, contextData) {
   const url = new URL(roomRequest.url);
   if (original.searchParams.get('protocol') !== '2') return json({error:'Reload to join the world'},426);
   const watch = original.searchParams.get('watch') ?? 'home';
-  const play = url.pathname === '/bog-room' || url.searchParams.get('play') === '1';
+  const play = url.pathname === '/bog-room' || url.pathname === '/sled-room' || url.searchParams.get('play') === '1';
   url.searchParams.set('watch',watch);
   for (let attempt = 0; ; attempt++) {
     const admission = await call(env,'/simulation/admit',{digest:key,play,watch},contextData);
@@ -262,6 +262,16 @@ export async function connect({request,env,data}, fetchGitHub = fetch) {
   if (url.searchParams.get('globeFeed') === '1') roomUrl.searchParams.set('globeFeed', '1');
   if (url.searchParams.get('nearby') === '1') roomUrl.searchParams.set('nearby', '1');
   return upgrade(env,new Request(roomUrl,{headers}),url,key,data);
+}
+
+// The sled hill's race room (same checks as the Bog; the room checks where the player is).
+export async function connectSled({request,env,data}) {
+  const url=new URL(request.url);
+  if(request.headers.get('Upgrade')?.toLowerCase()!=='websocket')return json({},426);
+  if(request.headers.get('Origin')!==url.origin)return json({},403);
+  const key=await digest(cookie(request,sessionCookie));
+  if(!key)return json({},401);
+  return upgrade(env,new Request('https://island.internal/sled-room',{headers:new Headers({Upgrade:'websocket','X-Session-Digest':key})}),url,key,data);
 }
 
 export async function connectBog({request,env,data}) {

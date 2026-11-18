@@ -27,7 +27,7 @@
         },
         {
           "path": "assets/world/island-geometry.mjs",
-          "sha256": "43c9fd1318145f12eb4ef1c4e5b3ed663d1e2c376acea24781ee627c0203b53a"
+          "sha256": "39888d494844be4609a1e050d25cf6c769ad044a37e3505184a28b4c9c37a812"
         },
         {
           "path": "public/pixi-art/decals/edge-stone-1.svg",
@@ -1051,7 +1051,7 @@
         },
         {
           "path": "src/world/island-maps.js",
-          "sha256": "cc0d68b09b0a81a91d102e96b45cf3f11d94870c57173c1f1d68cc36bf1f6a67"
+          "sha256": "4204e24e2caa04fd09a72e8af7360c84e9284212026035770ee1ba94fc9ff682"
         },
         {
           "path": "src/world/prop-outlines/geometry.js",
@@ -1066,7 +1066,7 @@
           "sha256": "399d9d530d1cae303c1236d72e0be337596e51b8dcbd4483c25859f86a7be5ab"
         }
       ],
-      "sha256": "76bd0d3710d6abe7e44b69234af5e88f2179e555829c5d1ced3e7f6bf302f59f"
+      "sha256": "ecffe37efdc5d3515f64c42f08fa1bb42eca0303a340c87789abdf18efb1518e"
     },
     "groundSha256": "dddbf340591c9c37fbe7ffb512aa8561b0dd33aec741be13b64e96b528c9ab21",
     "src": "/pixi-art/globe/home.svg",
@@ -1095,7 +1095,7 @@
       "files": [
         {
           "path": "assets/world/island-geometry.mjs",
-          "sha256": "43c9fd1318145f12eb4ef1c4e5b3ed663d1e2c376acea24781ee627c0203b53a"
+          "sha256": "39888d494844be4609a1e050d25cf6c769ad044a37e3505184a28b4c9c37a812"
         },
         {
           "path": "public/pixi-art/detail/street--bench-wood.svg",
@@ -2143,14 +2143,14 @@
         },
         {
           "path": "src/world/island-maps.js",
-          "sha256": "cc0d68b09b0a81a91d102e96b45cf3f11d94870c57173c1f1d68cc36bf1f6a67"
+          "sha256": "4204e24e2caa04fd09a72e8af7360c84e9284212026035770ee1ba94fc9ff682"
         },
         {
           "path": "src/world/world-map.js",
           "sha256": "399d9d530d1cae303c1236d72e0be337596e51b8dcbd4483c25859f86a7be5ab"
         }
       ],
-      "sha256": "7ea6f51c9c45a608d427c7d24adf11bffaf1059c4eb3ee7eac2a4f7c1fae3d43"
+      "sha256": "cc1127ba9f4ceafae8076e06ef34f1e02fd41701cb16de9cd5676a95dde80811"
     },
     "groundSha256": "9ccbb8ccdcc856fbee572465311b5041240705b4b64336793493b855ae057189",
     "src": "/pixi-art/globe/sunflower.svg",
@@ -2179,7 +2179,7 @@
       "files": [
         {
           "path": "assets/world/island-geometry.mjs",
-          "sha256": "43c9fd1318145f12eb4ef1c4e5b3ed663d1e2c376acea24781ee627c0203b53a"
+          "sha256": "39888d494844be4609a1e050d25cf6c769ad044a37e3505184a28b4c9c37a812"
         },
         {
           "path": "public/pixi-art/decals/flower-dot-1.svg",
@@ -4943,14 +4943,14 @@
         },
         {
           "path": "src/world/island-maps.js",
-          "sha256": "cc0d68b09b0a81a91d102e96b45cf3f11d94870c57173c1f1d68cc36bf1f6a67"
+          "sha256": "4204e24e2caa04fd09a72e8af7360c84e9284212026035770ee1ba94fc9ff682"
         },
         {
           "path": "src/world/world-map.js",
           "sha256": "399d9d530d1cae303c1236d72e0be337596e51b8dcbd4483c25859f86a7be5ab"
         }
       ],
-      "sha256": "a5d217b29f79be441fdb91acb1cc9a81d57fc19c741d8d0a39fe25cc3fc666d1"
+      "sha256": "2cbc0a24829c8dc09ce6a1c779354f7314e51618c5733dc3e9566c8742e64afc"
     },
     "groundSha256": "4a2bfe012c25cde81a98819c586f7730ce716f938aa26be92c03181cb0b11678",
     "src": "/pixi-art/globe/pink.svg",
@@ -4979,7 +4979,7 @@
       "files": [
         {
           "path": "assets/world/island-geometry.mjs",
-          "sha256": "43c9fd1318145f12eb4ef1c4e5b3ed663d1e2c376acea24781ee627c0203b53a"
+          "sha256": "39888d494844be4609a1e050d25cf6c769ad044a37e3505184a28b4c9c37a812"
         },
         {
           "path": "public/pixi-art/detail/street--bench-wood.svg",
@@ -7427,14 +7427,14 @@
         },
         {
           "path": "src/world/island-maps.js",
-          "sha256": "cc0d68b09b0a81a91d102e96b45cf3f11d94870c57173c1f1d68cc36bf1f6a67"
+          "sha256": "4204e24e2caa04fd09a72e8af7360c84e9284212026035770ee1ba94fc9ff682"
         },
         {
           "path": "src/world/world-map.js",
           "sha256": "399d9d530d1cae303c1236d72e0be337596e51b8dcbd4483c25859f86a7be5ab"
         }
       ],
-      "sha256": "57a8633498b30814714bd1e71304b14ec42a0d5bd022df3f6e78cc51fecb0002"
+      "sha256": "93dacc5ce3f6f7f333fbbb9b96324d859e165c41c0dd903fd6265e993cdf9910"
     },
     "groundSha256": "b1e2068757db08e88bed6f6678004f5f6c1a7c2f8e046b81134bf1f715a90105",
     "src": "/pixi-art/globe/library.svg",
@@ -7463,7 +7463,7 @@
       "files": [
         {
           "path": "assets/world/island-geometry.mjs",
-          "sha256": "43c9fd1318145f12eb4ef1c4e5b3ed663d1e2c376acea24781ee627c0203b53a"
+          "sha256": "39888d494844be4609a1e050d25cf6c769ad044a37e3505184a28b4c9c37a812"
         },
         {
           "path": "public/pixi-art/decals/flower-dot-1.svg",
@@ -8435,14 +8435,14 @@
         },
         {
           "path": "src/world/island-maps.js",
-          "sha256": "cc0d68b09b0a81a91d102e96b45cf3f11d94870c57173c1f1d68cc36bf1f6a67"
+          "sha256": "4204e24e2caa04fd09a72e8af7360c84e9284212026035770ee1ba94fc9ff682"
         },
         {
           "path": "src/world/world-map.js",
           "sha256": "399d9d530d1cae303c1236d72e0be337596e51b8dcbd4483c25859f86a7be5ab"
         }
       ],
-      "sha256": "036135ee6310d92a5c29d8c5bc893b0eb3f2483c99c60d84d9cda8ab15cdb9af"
+      "sha256": "beb5214af6f7cfc836293689975b108a3ec4a1ae842d87a25cbe95b466903479"
     },
     "groundSha256": "56ca5b43b287cbfbfb290f654f917a0311a042d4be767993605833f2ca3519d2",
     "src": "/pixi-art/globe/community.svg",
@@ -8471,7 +8471,7 @@
       "files": [
         {
           "path": "assets/world/island-geometry.mjs",
-          "sha256": "43c9fd1318145f12eb4ef1c4e5b3ed663d1e2c376acea24781ee627c0203b53a"
+          "sha256": "39888d494844be4609a1e050d25cf6c769ad044a37e3505184a28b4c9c37a812"
         },
         {
           "path": "public/pixi-art/home-review/hill/telescope.svg",
@@ -8891,14 +8891,14 @@
         },
         {
           "path": "src/world/island-maps.js",
-          "sha256": "cc0d68b09b0a81a91d102e96b45cf3f11d94870c57173c1f1d68cc36bf1f6a67"
+          "sha256": "4204e24e2caa04fd09a72e8af7360c84e9284212026035770ee1ba94fc9ff682"
         },
         {
           "path": "src/world/world-map.js",
           "sha256": "399d9d530d1cae303c1236d72e0be337596e51b8dcbd4483c25859f86a7be5ab"
         }
       ],
-      "sha256": "b3a0f8f9191bd9aba310aee420b8681a4153835481a77040f66eac471c70559e"
+      "sha256": "6d8207e523e186fc8d2845439901f4263d9934eaa6d29e91b07c18764218007f"
     },
     "groundSha256": "40584b6e5bda1d8e14c75565e8109d9ee0755a748f82bdd07d34ca1b1622a64e",
     "src": "/pixi-art/globe/bog.svg",
@@ -8923,11 +8923,11 @@
     "sources": {
       "version": 1,
       "theme": "snow",
-      "modelSha256": "0e75f3c4617bc9dcb00e9807a43f2bef3074dedabfd1cff72003686408d5d18e",
+      "modelSha256": "278106f70cc6e349df83f7163616df42d1f03807ea0d00a665f85aa1f03b2371",
       "files": [
         {
           "path": "assets/world/island-geometry.mjs",
-          "sha256": "43c9fd1318145f12eb4ef1c4e5b3ed663d1e2c376acea24781ee627c0203b53a"
+          "sha256": "39888d494844be4609a1e050d25cf6c769ad044a37e3505184a28b4c9c37a812"
         },
         {
           "path": "public/pixi-art/home-review/hill/telescope.svg",
@@ -10523,22 +10523,22 @@
         },
         {
           "path": "src/world/island-maps.js",
-          "sha256": "cc0d68b09b0a81a91d102e96b45cf3f11d94870c57173c1f1d68cc36bf1f6a67"
+          "sha256": "4204e24e2caa04fd09a72e8af7360c84e9284212026035770ee1ba94fc9ff682"
         },
         {
           "path": "src/world/world-map.js",
           "sha256": "399d9d530d1cae303c1236d72e0be337596e51b8dcbd4483c25859f86a7be5ab"
         }
       ],
-      "sha256": "344d366efb59a71eb066bcf54eb8751fd7cf43788bb3e20651d99e45cdfeefc3"
+      "sha256": "b4a4647faa73e7018858b5738e988d3324733ac7e73d9f6b82a400d96c79b9e1"
     },
-    "groundSha256": "2fdaf51c505df0bc6703d582052b7ebf887085beafe964d8bbdf50495e6a2790",
+    "groundSha256": "c2423efbe1c621daa7ee7bff6e211b79b1f702e6d6c5df7b1b711a6756383e7e",
     "src": "/pixi-art/globe/snow.svg",
-    "sha256": "b4bb2b379739592718fbf1e61c3f947698e8f18cf960acbd3d706484027b370d",
+    "sha256": "f3957c4313cf85c960cacf81a13fa4e2efcec3d68eb571e195420cf1bd20762d",
     "width": 1024,
-    "height": 794,
-    "bytes": 328216,
-    "groundBytes": 205378,
+    "height": 975,
+    "bytes": 330911,
+    "groundBytes": 208046,
     "quality": {
       "tolerance": 0.2,
       "minArea": 0.12,
@@ -10546,7 +10546,7 @@
       "quantum": 0.25
     },
     "worldPaths": 25,
-    "walkways": 0,
+    "walkways": 1,
     "flats": 644,
     "decks": 0,
     "bridgeDetails": 1

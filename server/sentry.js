@@ -8,7 +8,7 @@ const spanAttributes = ['sentry.op', 'sentry.origin', 'http.request.method', 'ht
 const logMessages = new Set(['Pages request completed', 'Pages request failed', 'Room request completed', 'Room request failed', 'Room upgrade received', 'Room socket closed', 'Room socket error',
   'Room socket rejected', 'Room initialized', 'Room operation failed', 'Room operation slow', 'Room operation timings',
   'Public fleet repair status', 'Public fleet repair status failed']);
-const roomBindingRoutes = new Set(['/room', '/bog-room', '/consume', '/flow', '/friends', '/outfit',
+const roomBindingRoutes = new Set(['/room', '/bog-room', '/sled-room', '/consume', '/flow', '/friends', '/outfit',
   '/session/access', '/session/get', '/session/new', '/session/revoke', '/stars', '/stars/count']);
 const roomFailureFlags = ['overloaded', 'retryable', 'remote'];
 const roomUpgradeReasons = new Set([...roomFailureFlags, 'unknown', 'upstream_5xx']);

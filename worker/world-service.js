@@ -33,7 +33,7 @@ export class WorldService extends LegacyRoom {
     if (path.startsWith('/simulation/')) return this.control(path, await request.json());
     if (this.settings?.mode === 'maintenance') return fail(503);
     if (this.settings?.mode !== 'split') return super.fetch(request);
-    if (path === '/room' || path === '/bog-room') return fail(426);
+    if (path === '/room' || path === '/bog-room' || path === '/sled-room') return fail(426);
     const tracked = ['/session/revoke', '/session/access', '/outfit', '/friends', '/stars'];
     if (!tracked.includes(path)) return super.fetch(request);
     const data = await request.clone().json();
