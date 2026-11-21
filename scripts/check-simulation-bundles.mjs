@@ -33,6 +33,7 @@ function pages(name, worldName) {
     routes: [name + '.local.test/*'],
     modules: [{type: 'ESModule', path: 'pages.js', contents: pagesBundle}],
     durableObjects: bindings('room'),
+    serviceBindings: {ASSETS: () => new Response(null, {status: 404})},
     outboundService: request => new Response(null, {
       status: request.url === 'https://api.github.com/user/starred/ente/ente' ? 204 : 404,
     }),
