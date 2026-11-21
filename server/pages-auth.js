@@ -1,4 +1,4 @@
-import {roomUpgradeRequestIdHeader} from './room-upgrade.js';
+import {roomReadmitHeader, roomUpgradeRequestIdHeader} from './room-upgrade.js';
 import {simulationStub, worldName, worldStub} from './simulation-routing.js';
 const sessionCookie = '__Host-ducky_session';
 const flowCookie = '__Host-ducky_oauth';
@@ -81,12 +81,15 @@ async function upgrade(env, roomRequest, original, key, contextData) {
   if (original.searchParams.get('protocol') !== '2') return json({error:'Reload to join the world'},426);
   const watch = original.searchParams.get('watch') ?? 'home';
   const play = url.pathname === '/bog-room' || url.searchParams.get('play') === '1';
-  const admission = await call(env,'/simulation/admit',{digest:key,play,watch},contextData);
-  if (!admission.ok) return admission;
-  const {owner} = await admission.json();
   url.searchParams.set('watch',watch);
-  return fetchRoomUpgrade(env, new Request(url,{headers:roomRequest.headers}), contextData,
-    () => simulationStub(env,worldName(env),owner));
+  for (let attempt = 0; ; attempt++) {
+    const admission = await call(env,'/simulation/admit',{digest:key,play,watch},contextData);
+    if (!admission.ok) return admission;
+    const {owner} = await admission.json();
+    const response = await fetchRoomUpgrade(env, new Request(url,{headers:roomRequest.headers}), contextData,
+      () => simulationStub(env,worldName(env),owner));
+    if (attempt || response.status !== 503 || !response.headers.has(roomReadmitHeader)) return response;
+  }
 }
 
 function configured(env) {

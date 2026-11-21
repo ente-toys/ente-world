@@ -28,10 +28,16 @@ test(
     import {IslandSimulation, SeaSimulation} from './worker/simulation.js';
     import {WorldPresence} from './worker/world-presence.js';
     import {worldStub,simulationStub,presenceStub,internalPost} from './server/simulation-routing.js';
-    import {connect,createTestSession,logout} from './server/pages-auth.js';
+    import {connect,createTestSession,friends,logout} from './server/pages-auth.js';
     import {boardingPoint,harborOf} from './src/gameplay/islands.js';
     import {TELEPORTERS} from './src/gameplay/teleport.js';
-    export {WorldPresence};
+    export class FixturePresence extends WorldPresence {
+      fetch(request) {
+        if(new URL(request.url).pathname==='/locations')
+          return Response.json({error:'Presence unavailable'}, {status:503});
+        return super.fetch(request);
+      }
+    }
     export class TestWorld extends WorldService {
       async fetch(request) {
         if(new URL(request.url).pathname==='/fixture/economy') {
@@ -63,10 +69,10 @@ test(
         if(new URL(request.url).pathname==='/fixture/stages')
           return Response.json(this.sql.exec('SELECT state FROM simulation_transfers').toArray());
         if(new URL(request.url).pathname==='/fixture/invalidate-resume') {
-          const {account}=await request.json();
+          const {account,drop}=await request.json();
           const {owner}=this.directory.find(account);
           const island=simulationStub(this.env,this.settings.world,owner);
-          const result=await internalPost(island,'/fixture/invalidate-resume',{account});
+          const result=await internalPost(island,'/fixture/invalidate-resume',{account,drop});
           if(result.ok) this.sql.exec('DELETE FROM simulation_spawn_generations WHERE account=?',account);
           return result;
         }
@@ -97,9 +103,11 @@ test(
         const path=new URL(request.url).pathname;
         if(path==='/fixture/fleet')return Response.json(this.room.boats);
         if(path==='/fixture/invalidate-resume') {
-          const {account}=await request.json();
-          const [row]=this.room.sql.exec(
-            "UPDATE resumes SET pose=json_set(pose,'$.x',1000000000,'$.y',1000000000) WHERE account=? RETURNING account",account
+          const {account,drop}=await request.json();
+          const [row]=this.room.sql.exec(drop
+            ? 'DELETE FROM resumes WHERE account=? RETURNING account'
+            : "UPDATE resumes SET pose=json_set(pose,'$.x',1000000000,'$.y',1000000000) WHERE account=? RETURNING account",
+            account
           ).toArray();
           return new Response(null,{status:row?204:404});
         }
@@ -189,6 +197,7 @@ test(
       }
       if(url.pathname==='/session') return createTestSession(ctx);
       if(url.pathname==='/room') return connect(ctx);
+      if(url.pathname==='/friends') return friends(ctx);
       if(url.pathname==='/logout')return logout(ctx);
       if(url.pathname==='/migrate') return internalPost(worldStub(env,world),'/simulation/migrate',
         {id:url.searchParams.get('id'),target:url.searchParams.get('target'),world});
@@ -221,7 +230,7 @@ test(
               ISLAND: 'TestWorld',
               ISLAND_SIM: 'FixtureIsland',
               SEA_SIM: 'TestSea',
-              WORLD_PRESENCE: 'WorldPresence',
+              WORLD_PRESENCE: 'FixturePresence',
             }).map(([key, className]) => [key, {className, useSQLite: true}])
           ),
         })
@@ -396,6 +405,18 @@ test(
     assert.equal(duck.mode, 'walking');
     assert.ok(mapOf(recovered.snapshot.islandId).nav().walkable(duck.x, duck.y));
     recovered.socket.close();
+    await waitAsync(async () => (await request('/invalidate-resume?world=spawn', {
+      method: 'POST', body: JSON.stringify({account: overflowUser.accountId, drop: true}),
+    })).ok);
+    const readmitted = await join(overflowParams);
+    assert.equal(readmitted.snapshot.islandId, 'home', 'missing resume readmits the player at home');
+    readmitted.socket.close();
+
+    const friendsResponse = await request('/friends?world=spawn', {
+      headers: {Cookie: '__Host-ducky_session=' + overflowToken},
+    });
+    assert.equal(friendsResponse.status, 200, 'Friends stays available while presence returns an error');
+    assert.deepEqual(await friendsResponse.json(), {friends: [], incoming: [], outgoing: []});
 
     const teleportSession = await request('/session?world=teleport', {
       method:'POST',

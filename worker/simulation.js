@@ -1,3 +1,4 @@
+import {roomReadmitHeader} from '../server/room-upgrade.js';
 import {SailRouteQueue} from './sail-route-queue.js';
 import {localMigration} from './simulation-migration.js';
 import {BOAT_RETURN_RETRY_MS, IslandRoom, wirePose} from './index.js';
@@ -939,8 +940,10 @@ class LocalSimulation extends IslandRoom {
             .exec('SELECT 1 FROM resumes WHERE account=? AND expires>?', user.account, Date.now())
             .toArray().length
         ) {
-          await this.control('release-location', {account: user.account, digest, owner, generation});
-          return fail(503);
+          const released = await this.control('release-location', {account: user.account, digest, owner, generation});
+          return released.ok
+            ? new Response(null, {status: 503, headers: {[roomReadmitHeader]: '1'}})
+            : fail(503);
         }
         if (initialSpawn) headers.set('X-Initial-Spawn', '1');
         const arrival = this.sql

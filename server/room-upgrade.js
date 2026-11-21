@@ -1,3 +1,4 @@
+export const roomReadmitHeader = 'X-Ducky-Room-Readmit';
 export const roomUpgradeRequestIdHeader = 'X-Ducky-Room-Upgrade-Id';
 
 export function isRoomUpgradeRoute(route) {

@@ -67,18 +67,19 @@ export class WorldService extends LegacyRoom {
         path === '/friends'
           ? internalPost(service, '/locations', {accounts: result.friends.map((f) => f.accountId)})
           : service.fetch('https://island.internal/read');
-      const presence = await query.then((response) => response.json()).catch(() => ({players: []}));
+      const presence = await query.then((response) => response.ok ? response.json() : null).catch(() => null);
+      const livePlayers = Array.isArray(presence?.players) ? presence.players : [];
       if (path === '/friends') {
-        const players = new Map(presence.players.map((p) => [p.account, p]));
+        const players = new Map(livePlayers.map((p) => [p.account, p]));
         for (const friend of result.friends) {
           const live = players.get(friend.accountId);
           if (live) friend.where = {islandId: live.islandId, x: live.x, y: live.y, mode: live.mode};
         }
       } else {
         const named = new Map(result.players);
-        for (const p of presence.players) if (p.login) named.set(p.account, p.login);
+        for (const p of livePlayers) if (p.login) named.set(p.account, p.login);
         result.players = [...named];
-        result.online = presence.players.map((p) => p.account);
+        result.online = livePlayers.map((p) => p.account);
       }
       return Response.json(result);
     }
@@ -319,12 +320,13 @@ export class WorldService extends LegacyRoom {
           .toArray().length
       )
         return fail();
-      this.sql.exec(
-        "UPDATE simulation_owners SET owner='home',generation=generation+1 WHERE account=? AND generation=?",
+      const [moved] = this.sql.exec(
+        "UPDATE simulation_owners SET owner='home',generation=generation+1 WHERE account=? AND owner=? AND generation=? RETURNING owner",
         account,
+        owner,
         generation
-      );
-      return Response.json({owner: 'home'});
+      ).toArray();
+      return moved ? Response.json(moved) : fail();
     }
     if (path === '/simulation/prepare') {
       if (data.teleportFare) {
