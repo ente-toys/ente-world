@@ -1,4 +1,3 @@
-import {guestReconnectDiagnostics, testSession} from './test-session.js';
 import {useEffect, useRef, useState} from 'react';
 import {PixiIsland} from '../rendering/pixi/engine.js';
 import {RoomClient} from '../multiplayer/room-client.js';
@@ -66,7 +65,7 @@ export default function PixiPage({signedInEntry = false}) {
   const [globeOpen,setGlobeOpen] = useState(false);
   const [notificationHost,setNotificationHost] = useState(null);
   const params = new URLSearchParams(location.search);
-  const offline = import.meta.env.DEV && params.get('dev') === '1';
+  const offline = params.has('offline') || (import.meta.env.DEV && params.get('dev') === '1');
   // back from GitHub: the intro's clouds cover the island until it is drawn, then a name tag, then the star box
   const [fromGitHub] = useState(arrivalPending);
   // guests and signed-in reloads come in under the same cover (a reload has no name tag)
@@ -87,7 +86,7 @@ export default function PixiPage({signedInEntry = false}) {
     const abort = new AbortController();
     const refresh = async (initial = false) => {
       try {
-        const value = await testSession() ?? (initial ? await startupSession(true) : await fetch('/api/session', {signal:abort.signal}).then(r => {if (!r.ok) throw Error('Session request failed'); return r.json();}));
+        const value = initial ? await startupSession(true) : await fetch('/api/session', {signal:abort.signal}).then(r => {if (!r.ok) throw Error('Session request failed'); return r.json();});
         if (!abort.signal.aborted) setSession(value);
       } catch {
         if (!abort.signal.aborted) setSession({user:null, signInAvailable:false});
@@ -115,7 +114,6 @@ export default function PixiPage({signedInEntry = false}) {
       setTravel(state);
       void island.current?.prepareIsland(state.islandId).catch(()=>{});
     }, setTravelNotice);
-    client.onReconnectDiagnostic = guestReconnectDiagnostics();
     room.current = offline ? null : client;
     const game = new PixiIsland({room:offline ? null : client, chatLayer:chatLayer.current, chatEditor, nameLayer:nameLayer.current,
       randomArrival:offline, onArrival:name => {

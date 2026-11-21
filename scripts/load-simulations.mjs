@@ -45,10 +45,9 @@ async function run() {
       watch: player.island,
     });
     if (player.id) params.set('resume', player.id);
-    if (player.token) params.set('testSession', player.token);
     const start = performance.now();
     const result = await req('/room?' + params, {
-      headers: {Upgrade: 'websocket', Origin: 'https://local.test'},
+      headers: {Upgrade: 'websocket', Origin: 'https://local.test', ...(player.token && {Cookie: '__Host-ducky_session=' + player.token})},
     });
     assert.equal(result.status, 101, result.status === 101 ? '' : await result.text());
     const socket = result.webSocket,

@@ -28,7 +28,7 @@ test(
     import {IslandSimulation, SeaSimulation} from './worker/simulation.js';
     import {WorldPresence} from './worker/world-presence.js';
     import {worldStub,simulationStub,presenceStub,internalPost} from './server/simulation-routing.js';
-    import {connect,createTestSession,friends,logout} from './server/pages-auth.js';
+    import {connect,friends,logout} from './server/pages-auth.js';
     import {boardingPoint,harborOf} from './src/gameplay/islands.js';
     import {TELEPORTERS} from './src/gameplay/teleport.js';
     export class FixturePresence extends WorldPresence {
@@ -195,8 +195,19 @@ test(
           players:Array.from({length:count},(_,i)=>({account:'seed-'+i,generation:1})),
         });
       }
-      if(url.pathname==='/session') return createTestSession(ctx);
-      if(url.pathname==='/room') return connect(ctx);
+      if(url.pathname==='/session') {
+        const token=crypto.randomUUID().replaceAll('-', '')+'0123456789A';
+        const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token))));
+        const account='test-'+crypto.randomUUID();
+        const login='fixture-'+account.slice(-8);
+        const saved=await internalPost(worldStub(env,world),'/session/new',{
+          digest:btoa(String.fromCharCode(...digest)).replaceAll('+','-').replaceAll('/','_').replaceAll('=',''),
+          account,login,canPlay:true,githubToken:'fixture-github-token',
+        });
+        if(!saved.ok)return saved;
+        return Response.json({token,user:{accountId:account,login}});
+      }
+      if(url.pathname==='/room') return connect(ctx, async () => new Response(null, {status:204}));
       if(url.pathname==='/friends') return friends(ctx);
       if(url.pathname==='/logout')return logout(ctx);
       if(url.pathname==='/migrate') return internalPost(worldStub(env,world),'/simulation/migrate',
@@ -260,9 +271,9 @@ test(
       }
       assert.fail('Timed out waiting for durable transfer');
     };
-    const join = async (params) => {
+    const join = async (params, token) => {
       const response = await request('/room?protocol=2&' + params, {
-        headers: {Upgrade: 'websocket', Origin: 'https://game.test'},
+        headers: {Upgrade: 'websocket', Origin: 'https://game.test', ...(token && {Cookie:'__Host-ducky_session=' + token})},
       });
       assert.equal(response.status, 101, response.status === 101 ? '' : await response.text());
       const socket = response.webSocket,
@@ -274,7 +285,6 @@ test(
     };
     const sessionResponse = await request('/session', {
       method: 'POST',
-      headers: {'X-Multiplayer-Test-Id': '919c4104-faed-4a20-931c-9b3abec359ab', Origin: 'https://game.test'},
     });
     assert.equal(sessionResponse.status, 200);
     const {token} = await sessionResponse.json();
@@ -284,7 +294,10 @@ test(
     assert.equal(other.welcome.protocol, undefined);
     const watcher = await join('play=0&watch=blossom');
     assert.equal(watcher.snapshot.islandId, 'blossom');
-    const player = await join('play=1&testSession=' + token);
+    const oldTestLink = await join('play=1&testSession=' + token);
+    assert.equal(oldTestLink.welcome.id, null);
+    oldTestLink.socket.close();
+    const player = await join('play=1', token);
     assert.equal(player.welcome.protocol, 2);
     assert.equal(player.snapshot.roomSentAt, undefined);
     player.socket.send(JSON.stringify({type: 'room-timing', id: 13}));
@@ -322,24 +335,20 @@ test(
     await runtime.dispose();
     runtime = start(false);
     await runtime.ready;
-    const sailor = await join('play=1&testSession=' + token + '&resume=' + dock.actor);
+    const sailor = await join('play=1&resume=' + dock.actor, token);
     assert.equal(sailor.welcome.id, dock.actor);
     assert.equal(sailor.snapshot.players.find((p) => p.id === dock.actor).mode, 'sailing');
     assert.equal(sailor.snapshot.boats.filter((b) => b.id === dock.boat).length, 1);
-    const guest = await join('play=1&testSession=' + token);
+    const guest = await join('play=1', token);
     assert.equal(guest.welcome.id, dock.actor, 'replacement login keeps the active sailing actor');
     const taken = await wait(() => sailor.messages.find((m) => m.type === 'role'));
     assert.equal(taken.reason, 'taken-over');
     const second = await (
       await request('/session', {
         method: 'POST',
-        headers: {
-          'X-Multiplayer-Test-Id': '919c4104-faed-4a20-931c-9b3abec359ab',
-          Origin: 'https://game.test',
-        },
       })
     ).json();
-    const revoked = await join('play=1&testSession=' + second.token);
+    const revoked = await join('play=1', second.token);
     const loggedOut = await request('/logout', {
       method: 'POST',
       headers: {Cookie: '__Host-ducky_session=' + second.token, Origin: 'https://game.test'},
@@ -360,7 +369,7 @@ test(
       409,
       'superseded deployment cannot start another cutover'
     );
-    const restored = await join('play=1&testSession=' + token + '&resume=' + dock.actor);
+    const restored = await join('play=1&resume=' + dock.actor, token);
     assert.equal(restored.welcome.protocol, undefined);
     assert.equal(restored.welcome.id, dock.actor);
     assert.equal(restored.snapshot.players.find((p) => p.id === dock.actor).boatId, dock.boat);
@@ -371,26 +380,25 @@ test(
     const newSpawnToken = async () => {
       const response = await request('/session?world=spawn', {
         method: 'POST',
-        headers: {'X-Multiplayer-Test-Id': '919c4104-faed-4a20-931c-9b3abec359ab', Origin: 'https://game.test'},
       });
       assert.equal(response.status, 200);
       return response.json();
     };
     const {token: homeToken} = await newSpawnToken();
     assert.ok((await request('/seed-presence?world=spawn&count=14')).ok);
-    const homeSpawn = await join('world=spawn&play=1&testSession=' + homeToken);
+    const homeSpawn = await join('world=spawn&play=1', homeToken);
     assert.equal(homeSpawn.snapshot.islandId, 'home', 'spectators do not contribute to the threshold');
     homeSpawn.socket.close();
 
     const {token: overflowToken, user: overflowUser} = await newSpawnToken();
     assert.ok((await request('/seed-presence?world=spawn&count=15')).ok);
-    const overflowParams = 'world=spawn&play=1&testSession=' + overflowToken;
-    const overflow = await join(overflowParams);
+    const overflowParams = 'world=spawn&play=1';
+    const overflow = await join(overflowParams, overflowToken);
     assert.ok(['blossom', 'sunset', 'isle-251', 'isle-250', 'isle-55'].includes(overflow.snapshot.islandId));
     assert.ok(overflow.welcome.arrival);
     assert.ok(overflow.snapshot.players.some((p) => p.id === overflow.welcome.id));
     overflow.socket.close();
-    const rejoined = await join(overflowParams + '&resume=' + overflow.welcome.id);
+    const rejoined = await join(overflowParams + '&resume=' + overflow.welcome.id, overflowToken);
     assert.equal(rejoined.welcome.id, overflow.welcome.id);
     assert.equal(rejoined.snapshot.islandId, overflow.snapshot.islandId);
     rejoined.socket.close();
@@ -398,7 +406,7 @@ test(
     await waitAsync(async () => (await request('/invalidate-resume?world=spawn', {
       method: 'POST', body: JSON.stringify({account: overflowUser.accountId}),
     })).ok);
-    const recovered = await join(overflowParams);
+    const recovered = await join(overflowParams, overflowToken);
     assert.equal(recovered.snapshot.islandId, overflow.snapshot.islandId);
     const duck = recovered.snapshot.players.find((p) => p.id === recovered.welcome.id);
     assert.ok(duck, 'a returning duck with an unwalkable save must join as a player');
@@ -408,7 +416,7 @@ test(
     await waitAsync(async () => (await request('/invalidate-resume?world=spawn', {
       method: 'POST', body: JSON.stringify({account: overflowUser.accountId, drop: true}),
     })).ok);
-    const readmitted = await join(overflowParams);
+    const readmitted = await join(overflowParams, overflowToken);
     assert.equal(readmitted.snapshot.islandId, 'home', 'missing resume readmits the player at home');
     readmitted.socket.close();
 
@@ -420,12 +428,12 @@ test(
 
     const teleportSession = await request('/session?world=teleport', {
       method:'POST',
-      headers:{'X-Multiplayer-Test-Id':'919c4104-faed-4a20-931c-9b3abec359ab',Origin:'https://game.test'},
     });
     assert.equal(teleportSession.status,200);
-    const teleportParams = 'world=teleport&play=1&testSession=' + (await teleportSession.json()).token;
+    const {token: teleportToken} = await teleportSession.json();
+    const teleportParams = 'world=teleport&play=1';
     assert.ok((await request('/migrate?world=teleport&target=split&id=teleport-cutover')).ok);
-    const origin = await join(teleportParams);
+    const origin = await join(teleportParams, teleportToken);
     const seedBalance = balance => request('/teleporter?world=teleport',{method:'POST',body:JSON.stringify({balance})});
     assert.ok((await seedBalance(2)).ok);
     const travel = (player, islandId, destination, seq) => player.socket.send(JSON.stringify({type:'teleport',islandId,destination,seq}));
@@ -435,14 +443,14 @@ test(
     assert.ok((await seedBalance(11)).ok);
     travel(origin,'home','isle-249',2);
     await wait(() => origin.messages.find(m => m.type === 'transfer'));
-    const bog = await join(teleportParams + '&resume=' + origin.welcome.id);
+    const bog = await join(teleportParams + '&resume=' + origin.welcome.id, teleportToken);
     assert.equal(bog.welcome.id,origin.welcome.id);
     assert.equal(bog.welcome.ack,2);
     assert.equal(bog.snapshot.islandId,'isle-249');
     assert.equal((await wait(() => bog.messages.find(m => m.type === 'karma-state'))).balance,3);
     travel(bog,'isle-249','sunset',3);
     await wait(() => bog.messages.find(m => m.type === 'transfer'));
-    const sunset = await join(teleportParams + '&resume=' + bog.welcome.id);
+    const sunset = await join(teleportParams + '&resume=' + bog.welcome.id, teleportToken);
     assert.equal(sunset.welcome.ack,3);
     assert.equal(sunset.snapshot.islandId,'sunset');
     assert.equal((await wait(() => sunset.messages.find(m => m.type === 'karma-state'))).balance,0);
