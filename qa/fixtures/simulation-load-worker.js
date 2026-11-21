@@ -31,11 +31,12 @@ export class LoadWorld extends WorldService {
         nav = map.nav(),
         [x, y] = nav.nearest(map.spawn.x + (i % 12) * 45, map.spawn.y + (i % 8) * 55);
       this.sql.exec(
-        'INSERT INTO sessions(digest,account,login,expires,can_play) VALUES(?,?,?,?,1)',
+        'INSERT INTO sessions(digest,account,login,expires,can_play,github_token) VALUES(?,?,?,?,1,?)',
         digest,
         account,
         account,
-        Date.now() + 86400000
+        Date.now() + 86400000,
+        'fixture-github-token'
       );
       this.sql.exec(
         'INSERT INTO resumes VALUES(?,?,?)',
@@ -133,7 +134,7 @@ export default {
     if (url.pathname === '/seed') return internalPost(root, '/seed', {});
     if (url.pathname === '/start')
       return internalPost(root, '/simulation/migrate', {world: 'load', id: 'load-run', target: 'split'});
-    if (url.pathname === '/room') return connect({request, env, data: {}});
+    if (url.pathname === '/room') return connect({request, env, data: {}}, async () => new Response(null, {status: 204}));
     if (url.pathname === '/friends') return friends({request, env, data: {}});
     if (['/health', '/audit', '/board-fixture', '/land-fixture', '/suspend-fixture'].includes(url.pathname))
       return simulationStub(env, 'load', url.searchParams.get('island') ?? 'home').fetch(

@@ -1,5 +1,4 @@
 import {placeRigid,unplaceRigid} from '../world/rigid.js';
-import {authenticateTestSocket} from '../app/test-session.js';
 import {nearestSeaX} from '../world/flat-layout.js';
 import {nearbyCell} from './nearby.js';
 import {isletAt} from '../world/islet-walk.js';
@@ -155,35 +154,14 @@ export class RoomClient {
     this.prev = null; this.alpha = 1;
   }
 
-  recordReconnect(reason, details = {}) {
-    this.reconnectReason ??= reason;
-    if (!this.onReconnectDiagnostic || this.reconnectIncident) return;
-    const now = performance.now();
-    const pose = this.snapshotPlayers.get(this.id);
-    const since = timestamp => timestamp == null ? null : Math.round(now - timestamp);
-    this.reconnectIncident = {
-      at: Date.now(), reason, epoch: this.epoch ?? null, tick: this.tick,
-      sincePongMs: since(this.lastPongAt), sinceSnapshotMs: since(this.lastSnapshotAt),
-      before: this.diagnosticPosition(pose), player: this.id, boat: pose?.boatId,
-    };
-    const {player, boat, ...event} = this.reconnectIncident;
-    this.onReconnectDiagnostic({event: 'reconnect', ...event, ...details});
-  }
-
-  diagnosticPosition(pose) {
-    return pose ? {x: pose.x, y: pose.y, island: pose.islandId, mode: pose.mode} : null;
-  }
-
   connect(play = true, reconnecting = false, handoff = false) {
     this.wantsPlay = play;
     if (play) this.watchDestination = null;
     if (!reconnecting) {
       this.resumeId = null;
-      this.reconnectIncident = null;
       this.overloadBackoff = false;
       this.failures = 0;
     }
-    this.lastPongAt = null;
     this.lastSnapshotAt = null;
     this.sentWatchCell = null;
     this.lastWatchCellAt = -Infinity;
@@ -198,8 +176,6 @@ export class RoomClient {
     if (!this.leavingSocket) this.onStatus(reconnecting ? 'reconnecting' : 'connecting');
     const url = new URL('/api/room', location.href);
     url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
-    authenticateTestSocket(url);
-    if (url.searchParams.has('testSession') && this.reconnectReason) url.searchParams.set('reconnect',this.reconnectReason);
     url.searchParams.set('protocol','2');
     url.searchParams.set('nearby','1');
     if (!play) url.searchParams.set('watch',this.watchDestination ?? this.islandId ?? 'home');
@@ -221,7 +197,6 @@ export class RoomClient {
           if (now - pendingPing <= HEARTBEAT_TIMEOUT_MS) return;
           // An advancing room snapshot proves the socket is still receiving game updates.
           if (this.lastSnapshotAt === null || now - this.lastSnapshotAt > HEARTBEAT_TIMEOUT_MS) {
-            this.recordReconnect('heartbeat_timeout');
             this.connect(this.wantsPlay, true);
             return;
           }
@@ -234,7 +209,6 @@ export class RoomClient {
       if (socket !== this.socket) return;
       if (data === 'pong') {
         pendingPing = null;
-        if (this.onReconnectDiagnostic) this.lastPongAt = performance.now();
         return;
       }
       const message = JSON.parse(data);
@@ -264,9 +238,6 @@ export class RoomClient {
       }
       if (message.type === 'delta') {
         if (message.epoch !== this.epoch || message.baseTick !== this.tick || message.islandId !== this.islandId) {
-          this.recordReconnect('snapshot_mismatch', {
-            receivedEpoch: message.epoch, baseTick: message.baseTick, receivedTick: message.tick,
-          });
           this.connect(this.wantsPlay, true);
           return;
         }
@@ -295,7 +266,6 @@ export class RoomClient {
       if (message.type === 'chat') this.onChat(message.id, message.text);
       if (message.type === 'welcome' || message.type === 'role') {
         if (message.type === 'welcome') {
-          this.reconnectReason = null;
           this.splitWorld = message.protocol === 2;
           if (this.splitWorld && Number.isSafeInteger(message.ack)) this.seq=Math.max(this.seq,message.ack);
           this.overloadBackoff = false;
@@ -321,11 +291,10 @@ export class RoomClient {
         this.onStatus(this.id ? 'playing' : message.reason ?? 'watching');
       }
     };
-    socket.onclose = ({code, wasClean}) => {
+    socket.onclose = ({code}) => {
       if (socket !== this.socket) return;
       clearTimeout(this.friendRefreshTimer);
       clearInterval(this.heartbeat);
-      if (!full && code !== 4001) this.recordReconnect('transport_close', {code, wasClean});
       if (!this.leavingSocket) this.reset();
       if (full || code === 4001) {
         this.onStatus('spectators-full');
@@ -396,18 +365,6 @@ export class RoomClient {
     }
     const own=this.snapshotPlayers.get(this.id);
     this.authoritativePlayer = own;
-    if (this.onReconnectDiagnostic) {
-      const incident = this.reconnectIncident;
-      if (incident && (own && self || !this.wantsPlay)) {
-        this.reconnectIncident = null;
-        this.onReconnectDiagnostic({
-          event: 'reconnected', at: Date.now(), startedAt: incident.at, reason: incident.reason,
-          epoch, tick, after: this.diagnosticPosition(own),
-          samePlayer: Boolean(own && own.id === incident.player),
-          sameBoat: Boolean(own && own.boatId === incident.boat),
-        });
-      }
-    }
     const mode=own?.mode ?? 'walking';
     if(this.mode==='sailing'&&mode==='walking')this.arrivalBoatId=this.player?.boatId;
     const changed=this.islandId !== islandId || this.mode !== mode || this.epoch !== epoch;

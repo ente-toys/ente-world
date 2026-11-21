@@ -953,12 +953,7 @@ class LocalSimulation extends IslandRoom {
       }
     }
     const response = await super.fetch(new Request(url, {headers}));
-    if (response.status === 101) {
-      const reason = headers.get('X-Test-Reconnect');
-      if (reason) console.info('Room client reconnected', {...this.diagnostics(), reconnect_reason: reason});
-
-      this.startPublishing();
-    }
+    if (response.status === 101) this.startPublishing();
     return response;
   }
 }

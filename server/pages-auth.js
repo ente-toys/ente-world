@@ -159,19 +159,6 @@ export async function callback({request,env}, fetchGitHub = fetch) {
   }
 }
 
-export async function createTestSession({request,env}) {
-  if (request.headers.get('Origin') !== new URL(request.url).origin) return json({},403);
-  if (request.headers.get('X-Multiplayer-Test-Id') !== '919c4104-faed-4a20-931c-9b3abec359ab') return json({},404);
-  const token = randomToken();
-  const account = 'test-' + crypto.randomUUID();
-  const login = 'test-' + account.slice(-8);
-  const saved = await call(env,'/session/new',{
-    digest:await digest(token), account, login, canPlay:true, githubToken:null,
-  });
-  if (!saved.ok) return json({error:'Test session unavailable'},503);
-  return json({token,user:{accountId:account,login,canPlay:true}});
-}
-
 export async function session({request,env}) {
   const key = await digest(cookie(request,sessionCookie));
   if (!key) return json({user:null,signInAvailable:configured(env)});
@@ -261,28 +248,15 @@ export async function connect({request,env,data}, fetchGitHub = fetch) {
   if (request.headers.get('Upgrade')?.toLowerCase() !== 'websocket') return json({},426);
   if (request.headers.get('Origin') !== url.origin) return json({},403);
   const headers = new Headers({Upgrade:'websocket'});
-  const testToken = url.searchParams.get('testSession');
-  let key;
-  if (testToken !== null) {
-    if (!tokenPattern.test(testToken)) return json({},403);
-    key = await digest(testToken);
-    const result = await call(env,'/session/get',{digest:key},data);
-    if (!result.ok) return json({},503);
-    const user = await result.json();
-    if (!user?.account?.startsWith('test-') || !user.canPlay) return json({},403);
-  } else {
-    key = await digest(cookie(request,sessionCookie));
-  }
+  const key = await digest(cookie(request,sessionCookie));
   if (key) headers.set('X-Session-Digest',key);
   const play = url.searchParams.get('play') === '1' ? '1' : '0';
-  if (key && play === '1' && testToken === null) {
+  if (key && play === '1') {
     const check = await checkPlayAccess(env,key,fetchGitHub,data);
     if (check.error && check.status !== 401) return json({error:check.error},check.status);
   }
   const roomUrl = new URL('https://island.internal/room');
   roomUrl.searchParams.set('play', play);
-  const reason=url.searchParams.get('reconnect');
-  if(testToken && ['heartbeat_timeout','snapshot_mismatch','transport_close'].includes(reason)) headers.set('X-Test-Reconnect',reason);
   const resumeId = url.searchParams.get('resume');
   if (play === '1' && resumeId) roomUrl.searchParams.set('resume', resumeId);
   if (url.searchParams.get('globeFeed') === '1') roomUrl.searchParams.set('globeFeed', '1');

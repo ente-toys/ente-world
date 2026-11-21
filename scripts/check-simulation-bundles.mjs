@@ -1,5 +1,6 @@
 // Exercise separately bundled Pages and Worker scripts with real cross-script DO bindings.
 import assert from 'node:assert/strict';
+import {createHash, randomBytes} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 import {setTimeout as delay} from 'node:timers/promises';
 import {Miniflare, convertV4MiniflareOptions} from 'miniflare';
@@ -32,6 +33,10 @@ function pages(name, worldName) {
     routes: [name + '.local.test/*'],
     modules: [{type: 'ESModule', path: 'pages.js', contents: pagesBundle}],
     durableObjects: bindings('room'),
+    serviceBindings: {ASSETS: () => new Response(null, {status: 404})},
+    outboundService: request => new Response(null, {
+      status: request.url === 'https://api.github.com/user/starred/ente/ente' ? 204 : 404,
+    }),
     bindings: {ISLAND_ROOM_NAME: worldName, WORLD_LAYOUT: 'split', WORLD_MIGRATION_ID: 'first-cutover'},
   };
 }
@@ -73,9 +78,9 @@ async function until(read) {
   }
   assert.fail('Timed out waiting for a room message');
 }
-async function open(site, query) {
+async function open(site, query, token) {
   const response = await runtime.dispatchFetch(site + '/api/room?protocol=2&globeFeed=1&' + query, {
-    headers: {Origin: site, Upgrade: 'websocket'},
+    headers: {Origin: site, Upgrade: 'websocket', ...(token && {Cookie: '__Host-ducky_session=' + token})},
   });
   assert.equal(response.status, 101, response.status === 101 ? '' : await response.text());
   const socket = response.webSocket,
@@ -89,13 +94,25 @@ async function open(site, query) {
   return {socket, messages, first, welcome: messages.find((m) => m.type === 'welcome')};
 }
 try {
-  const response = await runtime.dispatchFetch(origin + '/api/test-session', {
+  const token = randomBytes(32).toString('base64url');
+  const rooms = await runtime.getDurableObjectNamespace('ISLAND', 'room');
+  const saved = await rooms.get(rooms.idFromName(world)).fetch('https://island.internal/session/new', {
     method: 'POST',
-    headers: {Origin: origin, 'X-Multiplayer-Test-Id': '919c4104-faed-4a20-931c-9b3abec359ab'},
+    body: JSON.stringify({
+      digest: createHash('sha256').update(token).digest('base64url'),
+      account: 'test-fixture-player', login: 'fixture-player', canPlay: true, githubToken: 'fixture-github-token',
+    }),
   });
-  assert.equal(response.status, 200);
-  const {token} = await response.json();
-  const home = await open(origin, 'play=1&testSession=' + token);
+  assert.ok(saved.ok);
+  const removed = await runtime.dispatchFetch(origin + '/api/test-session', {
+    method: 'POST',
+    headers: {Origin: origin},
+  });
+  assert.equal(removed.status, 404);
+  const guest = await open(origin, 'play=1&testSession=' + token);
+  assert.equal(guest.welcome.id, null);
+  guest.socket.close();
+  const home = await open(origin, 'play=1', token);
   const actor = home.welcome.id;
   assert.ok(actor);
   const quiet = await open(origin, 'play=0&watch=blossom');
@@ -114,7 +131,7 @@ try {
   const islands = await runtime.getDurableObjectNamespace('ISLAND_SIM', 'room');
   const object = islands.get(islands.idFromName(JSON.stringify([world, 'home'])));
   await assert.rejects(object.fetch('https://island.internal/fixture/restart'), /Home restart rehearsal/);
-  const recovered = await open(origin, 'play=1&testSession=' + token + '&resume=' + actor);
+  const recovered = await open(origin, 'play=1&resume=' + actor, token);
   assert.equal(recovered.welcome.id, actor);
   assert.notEqual(recovered.first.epoch, home.first.epoch);
   const pose = recovered.first.players.find((p) => p.id === actor);
