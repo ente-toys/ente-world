@@ -19,7 +19,7 @@ import {atTeleporter, TELEPORTERS, teleportPrice} from '../src/gameplay/teleport
 
 const STARGAZER_LIMIT = 5000;
 const TEST_LOGIN = /^test-[0-9a-f]{8}$/;
-const TEST_LOGIN_GLOB = 'test-' + '[0-9a-f]'.repeat(8);
+const TEST_LOGIN_HEX_HALF_GLOB = '[0-9a-f]'.repeat(4);
 const RESUME_MS = 30_000;
 const BOAT_RETURN_MS = 6 * 60 * 60 * 1000;
 export const BOAT_RETURN_RETRY_MS = 60_000;
@@ -532,7 +532,13 @@ export class IslandRoom {
     const user = this.session(data.digest, now);
     if (!user) return reply({error:'Please sign in again to look through the telescope.'},401);
     const count = this.sql.exec('SELECT count,checked FROM star_count WHERE id=1').toArray()[0];
-    const named = new Map(this.sql.exec('SELECT account,login FROM accounts WHERE account IN (SELECT account FROM stargazers) AND login NOT GLOB ? ORDER BY account LIMIT ?', TEST_LOGIN_GLOB, STARGAZER_LIMIT)
+    // Match two halves to stay within the 50-byte Durable Object GLOB limit.
+    const named = new Map(this.sql.exec(`
+      SELECT account, login FROM accounts
+      WHERE account IN (SELECT account FROM stargazers)
+        AND NOT (substr(login, 1, 9) GLOB ? AND substr(login, 10) GLOB ?)
+      ORDER BY account LIMIT ?
+    `, `test-${TEST_LOGIN_HEX_HALF_GLOB}`, TEST_LOGIN_HEX_HALF_GLOB, STARGAZER_LIMIT)
       .toArray().map(row => [row.account,row.login]));
     const playing = [...this.connections.values()].filter(info => info.actor && info.account && info.expires > now && !TEST_LOGIN.test(info.login));
     for (const info of playing) if (info.login) named.set(info.account, info.login);
