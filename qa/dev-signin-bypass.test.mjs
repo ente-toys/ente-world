@@ -8,7 +8,7 @@ for (const {name,dev,query,offline,signInAvailable=true} of [
   {name:'the dev shortcut starts offline play in development',dev:true,query:'?dev=1',offline:true},
   {name:'production ignores the dev shortcut',dev:false,query:'?dev=1',offline:false},
   {name:'production guests only watch, even when GitHub sign-in is unavailable',dev:false,query:'',offline:false,signInAvailable:false},
-  {name:'production guest play starts without a session or room connection',dev:false,query:'?offline',offline:true},
+  {name:'the former offline URL opens the guest view in production',dev:false,query:'?offline',offline:false},
 ]) test(name,async t=>{
   const {outputFiles:[bundle]}=await build({
     entryPoints:['src/app/PixiPage.jsx'],bundle:true,packages:'external',jsx:'automatic',format:'esm',write:false,

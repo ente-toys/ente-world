@@ -66,7 +66,7 @@ export default function PixiPage({signedInEntry = false}) {
   const [globeOpen,setGlobeOpen] = useState(false);
   const [notificationHost,setNotificationHost] = useState(null);
   const params = new URLSearchParams(location.search);
-  const offline = params.has('offline') || (import.meta.env.DEV && params.get('dev') === '1');
+  const offline = import.meta.env.DEV && params.get('dev') === '1';
   // back from GitHub: the intro's clouds cover the island until it is drawn, then a name tag, then the star box
   const [fromGitHub] = useState(arrivalPending);
   // guests and signed-in reloads come in under the same cover (a reload has no name tag)
