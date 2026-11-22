@@ -7459,7 +7459,7 @@
     "sources": {
       "version": 1,
       "theme": "community",
-      "modelSha256": "76cf85a60d186a86d7b298f27d0e0afd7cce11de34ed65ab20e161d6563f22be",
+      "modelSha256": "92360d617b9b11de65a5748f79bd733816563aa20f212bd19335935ca05cb40f",
       "files": [
         {
           "path": "assets/world/island-geometry.mjs",
@@ -7623,7 +7623,7 @@
         },
         {
           "path": "public/pixi-art/themes/community/art.json",
-          "sha256": "18fad1802ef267fbca419827328121bfd8fc98dafc06e91d149e2a1273695331"
+          "sha256": "98c15e76ebf7b8d360e3f14f8bdadf724bfd7900e6d9ddf81be708f667f3b5c5"
         },
         {
           "path": "public/pixi-art/themes/community/bridge-islet-1.svg",
@@ -7670,14 +7670,6 @@
           "sha256": "66b88c1f7ae876a519b6c4c9d179cd085de386f3cd40a60089fcbb588b7eefd2"
         },
         {
-          "path": "public/pixi-art/themes/community/centre/fire-base.svg",
-          "sha256": "7730e25183ce97b1e597e4b9bdd20d218e32045912f14bc36ff3432eed8cf28c"
-        },
-        {
-          "path": "public/pixi-art/themes/community/centre/fire-flame.svg",
-          "sha256": "39a0717219a8efc8994c04584f7300185eac075f6bf02c89701e058fe59c1be5"
-        },
-        {
           "path": "public/pixi-art/themes/community/centre/lamp-typing-10.svg",
           "sha256": "91bafd0ae2c17a49d4eccef8045431e2b3b4a6eda93878e7707edb9630735431"
         },
@@ -7704,18 +7696,6 @@
         {
           "path": "public/pixi-art/themes/community/centre/lights-west.svg",
           "sha256": "c6ba93883d3c3a83afa8c47a6791beb22d7eb7daae0a8a7e34f90f32219f1e95"
-        },
-        {
-          "path": "public/pixi-art/themes/community/centre/log-east.svg",
-          "sha256": "25d8ace5272848335809dbef86f90307b541579092eca0817d5a0d0a2bc880a7"
-        },
-        {
-          "path": "public/pixi-art/themes/community/centre/log-south.svg",
-          "sha256": "25d8ace5272848335809dbef86f90307b541579092eca0817d5a0d0a2bc880a7"
-        },
-        {
-          "path": "public/pixi-art/themes/community/centre/log-west.svg",
-          "sha256": "25d8ace5272848335809dbef86f90307b541579092eca0817d5a0d0a2bc880a7"
         },
         {
           "path": "public/pixi-art/themes/community/centre/notice-board.svg",
@@ -7915,7 +7895,7 @@
         },
         {
           "path": "public/pixi-art/themes/community/ground.svg",
-          "sha256": "51e9e26d07b680d1609879c41895540cdab94c6e39aab049dd44c4b2588aa2ce"
+          "sha256": "b2b16ee3e8959db36190c8c4a39dffc1089db2c024ff49fcf4b0fcfeb2f295c9"
         },
         {
           "path": "public/pixi-art/themes/community/hamlets/lanternloaf/bakery-paper-rolls.svg",
@@ -8462,14 +8442,14 @@
           "sha256": "399d9d530d1cae303c1236d72e0be337596e51b8dcbd4483c25859f86a7be5ab"
         }
       ],
-      "sha256": "a9278788db33b53e0a4cc970a4e5ddc40fde4177d1e4167dfca210a1e691a910"
+      "sha256": "036135ee6310d92a5c29d8c5bc893b0eb3f2483c99c60d84d9cda8ab15cdb9af"
     },
     "groundSha256": "56ca5b43b287cbfbfb290f654f917a0311a042d4be767993605833f2ca3519d2",
     "src": "/pixi-art/globe/community.svg",
-    "sha256": "9123be49b87ee3f301ed064e6167feb6b592c28012cfdd192a8b062eacbcbe20",
+    "sha256": "f8ae0cb447a8874df4550e3dbcd1c92b033cfd9dd0f5a0c09bcbb931b11cb425",
     "width": 1024,
     "height": 768,
-    "bytes": 742140,
+    "bytes": 726743,
     "groundBytes": 179856,
     "quality": {
       "tolerance": 0.2,

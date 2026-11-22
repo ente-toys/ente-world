@@ -17,7 +17,7 @@ import {KITE_ASSETS, createHomeKites} from '../environment/home-kites.js';
 import {createIcelandLifeLifecycle} from '../environment/iceland-life.js';
 
 const WIND = /tree|reeds|cattails|flower|leaf|bush|flag|bunting|banner|umbrella|sunflower/i;
-const NO_SHADOW = /bunting|banner|flag|bridge|blanket|lily|shell|reeds|rug|path|paving|^campfire( flame)?$|fire-base|fire-flame/i;   // the fire itself casts light, not a grey patch
+const NO_SHADOW = /bunting|banner|flag|bridge|blanket|lily|shell|reeds|rug|path|paving/i;
 
 async function buildThemeArt(map, {acquire, release, groundPool, renderer, tilt=1, rasterLoaderFactory=createRasterLoader,icelandRasterLoaderFactory=createIcelandRasterLoader, prepare=false, dpr=2, defaultZoom=.65, cancelled=()=>false}) {
   const [manifest, centre] = await Promise.all([

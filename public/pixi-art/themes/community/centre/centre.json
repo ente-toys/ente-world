@@ -27,82 +27,6 @@
       ]
     },
     {
-      "id": "campfire",
-      "file": "fire-base.svg",
-      "layer": "sorted",
-      "width": 406.43760000000003,
-      "height": 360.71337000000005,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.99
-      },
-      "at": [
-        0,
-        13
-      ],
-      "x": -203.21880000000002,
-      "y": -344.10623630000003,
-      "sortY": 13,
-      "flip": false
-    },
-    {
-      "id": "log-west",
-      "file": "log-west.svg",
-      "layer": "sorted",
-      "width": 284.734575,
-      "height": 111.37405500000001,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.99
-      },
-      "at": [
-        -279,
-        31
-      ],
-      "x": -421.3672875,
-      "y": -79.26031445000001,
-      "sortY": 31,
-      "flip": false
-    },
-    {
-      "id": "log-east",
-      "file": "log-east.svg",
-      "layer": "sorted",
-      "width": 284.734575,
-      "height": 111.37405500000001,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.99
-      },
-      "at": [
-        279,
-        31
-      ],
-      "x": 136.6327125,
-      "y": -79.26031445000001,
-      "sortY": 31,
-      "flip": true
-    },
-    {
-      "id": "log-south",
-      "file": "log-south.svg",
-      "layer": "front",
-      "width": 284.734575,
-      "height": 111.37405500000001,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.99
-      },
-      "at": [
-        0,
-        264
-      ],
-      "x": -142.3672875,
-      "y": 153.73968555,
-      "sortY": 264,
-      "flip": false
-    },
-    {
       "id": "notice-board",
       "file": "notice-board.svg",
       "layer": "sorted",
@@ -291,29 +215,6 @@
       "y": -444.13469999999995,
       "sortY": 138,
       "flip": false
-    },
-    {
-      "id": "campfire-flame",
-      "file": "fire-flame.svg",
-      "layer": "anim",
-      "width": 406.43760000000003,
-      "height": 360.71337000000005,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.555
-      },
-      "at": [
-        0,
-        -143.91031595000004
-      ],
-      "x": -203.21880000000002,
-      "y": -344.1062363000001,
-      "sortY": 13.099999999999909,
-      "animate": {
-        "kind": "fire",
-        "amplitude": 0.045,
-        "module": "src/rendering/pixi/environment/centre-motion/community.js"
-      }
     }
   ],
   "outerEdge": {
@@ -333,38 +234,6 @@
     }
   ],
   "blocked": [
-    {
-      "ellipse": {
-        "x": 0,
-        "y": -55,
-        "rx": 180,
-        "ry": 72
-      }
-    },
-    {
-      "ellipse": {
-        "x": -279,
-        "y": 17,
-        "rx": 131,
-        "ry": 20
-      }
-    },
-    {
-      "ellipse": {
-        "x": 279,
-        "y": 17,
-        "rx": 131,
-        "ry": 20
-      }
-    },
-    {
-      "ellipse": {
-        "x": 0,
-        "y": 250,
-        "rx": 131,
-        "ry": 20
-      }
-    },
     {
       "poly": [
         [

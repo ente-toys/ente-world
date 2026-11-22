@@ -7,7 +7,7 @@ import {makeMap} from '../src/world/island-maps.js';
 import {geometry,inShape} from '../assets/world/island-geometry.mjs';
 import {setWalkDestination,walkStep} from '../src/gameplay/player-motion.js';
 import {tileInView} from '../src/rendering/pixi/art/ground-stream.js';
-import {outsideStageProps,clearedStageFlat,stageEditedIds,walkEditedPositions} from './campfire-stage-scope.mjs';
+import {outsideStageProps,clearedStageFlat,stageEditedIds,walkEditedPositions,removedHearth as REMOVED_HEARTH} from './campfire-stage-scope.mjs';
 import {Container,ImageSource,Texture} from 'pixi.js';
 import {loadThemeArt} from '../src/rendering/pixi/art/theme-art.js';
 import {attachCentreMotion} from '../src/rendering/pixi/environment/centre-motion.js';
@@ -45,7 +45,7 @@ test('Campfire stair landing joins a 104-unit path and preserves all stage signs
  const approach=art.flats.find(p=>p.id==='stage-approach');assert.deepEqual([approach.x+630,approach.y],[4000,1282]);
  assert.equal(approach.width,690);assert.equal(approach.height,520);assert.match(fs.readFileSync(A+approach.src,'utf8'),/M578 0H682/);
  assert.deepEqual(art.flats,[...baseline.flats.filter(p=>!clearedStageFlat(p)),approach]);
- const original=baseline.props.filter(p=>!p.src.includes('badge-buoy'));
+ const original=baseline.props.filter(p=>!p.src.includes('badge-buoy')&&!REMOVED_HEARTH.includes(p.id));
  assert.deepEqual(outsideStageProps(art.props.slice(0,original.length)),outsideStageProps(original));
  for(const id of stageEditedIds){const before=original.find(p=>p.id===id),after=art.props.find(p=>p.id===id);
   assert(before&&after,id);
@@ -107,20 +107,16 @@ test('Campfire static centre view loads and draws the stage and cabinets',async 
  assert([...textures.values()].every(t=>t.destroyed));
 });
 
-test('Campfire static art preserves the existing animated hearth and releases its artwork',async()=>{
+test('Campfire plaza has no hearth or log seats, and its static art releases its artwork',async()=>{
  const fetch=globalThis.fetch,objects=new Container();let acquired=0,released=0;
  const groundPool=createGroundPool({acquire:async()=>readyTexture(),release:()=>{}});
  globalThis.fetch=async url=>({ok:true,json:async()=>read('public'+url)});
  let loaded;
  try{
   loaded=await loadThemeArt({...map,art:'/pixi-art/themes/community/art.json'},{groundPool,acquire:async()=>{acquired++;return readyTexture();},release:()=>released++});
+  assert.equal(loaded.props.filter(p=>REMOVED_HEARTH.includes(p.id)).length,0);
   await attachCentreMotion(loaded, objects);
-  const flame=loaded.props.find(p=>p.id==='campfire-flame').sprite;
-  const rest=[flame.x,flame.y,flame.scale.x,flame.scale.y];
-  loaded.updateCentre(.2,false);const a=flame.scale.y;
-  loaded.updateCentre(.8,false);assert.notEqual(flame.scale.y,a,'hearth still breathes');
-  loaded.updateCentre(1,true);assert.deepEqual([flame.x,flame.y,flame.scale.x,flame.scale.y],rest);
-  loaded.updateCentre(99,true);assert.deepEqual([flame.x,flame.y,flame.scale.x,flame.scale.y],rest);
+  loaded.updateCentre(.2,false);loaded.updateCentre(1,true);
  }finally{loaded?.destroy();groundPool.destroy();objects.destroy();globalThis.fetch=fetch;}
  assert.equal(released,acquired);
 });

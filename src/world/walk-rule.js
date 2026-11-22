@@ -8,8 +8,6 @@ export function blocks(o, source) {
   if (o.sleeper) return false;
   if (/(^|\/)benches\//.test(source?.src ?? '')) return true;
   const asset = source?.src?.split('/').at(-1).replace(/\.svg$/, '');
-  // The Campfire source is named fire-base, rather than campfire. Its stone basin is solid.
-  if(asset==='fire-base')return true;
   const n = (!asset || /^prop-\d+$/.test(asset) ? source?.name : asset) ?? o.prop ?? o.name ?? o.id;
   if (typeof n === 'number') return o.building === true;
   if (typeof n !== 'string') return false;

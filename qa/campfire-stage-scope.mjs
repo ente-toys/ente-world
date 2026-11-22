@@ -25,3 +25,6 @@ export const outsideStageObstacles=obstacles=>obstacles.filter(o=>{
   return o.rx===31&&((o.x===x&&o.y===y+dy)||(o.x===original[0]&&o.y===original[1]+dy));
  });
 });
+
+// The campfire hearth and its three log seats were removed from the plaza.
+export const removedHearth=['campfire','campfire-flame','log-west','log-east','log-south'];
