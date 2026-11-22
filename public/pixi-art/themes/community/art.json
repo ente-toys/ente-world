@@ -12851,78 +12851,6 @@
   ],
   "props": [
     {
-      "id": "campfire",
-      "name": "Campfire",
-      "src": "centre/fire-base.svg",
-      "x": 4000,
-      "y": 2653,
-      "width": 480,
-      "height": 426,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.99
-      },
-      "scale": 0.8467450000000001,
-      "flip": false,
-      "zone": "plaza",
-      "sortY": 2653,
-      "shadow": false
-    },
-    {
-      "id": "log-west",
-      "name": "Log seat",
-      "src": "centre/log-west.svg",
-      "x": 3721,
-      "y": 2671,
-      "width": 565,
-      "height": 221,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.99
-      },
-      "scale": 0.503955,
-      "flip": false,
-      "zone": "plaza",
-      "sortY": 2671,
-      "shadow": false
-    },
-    {
-      "id": "log-east",
-      "name": "Log seat",
-      "src": "centre/log-east.svg",
-      "x": 4279,
-      "y": 2671,
-      "width": 565,
-      "height": 221,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.99
-      },
-      "scale": 0.503955,
-      "flip": true,
-      "zone": "plaza",
-      "sortY": 2671,
-      "shadow": false
-    },
-    {
-      "id": "log-south",
-      "name": "Log seat",
-      "src": "centre/log-south.svg",
-      "x": 4000,
-      "y": 2904,
-      "width": 565,
-      "height": 221,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.99
-      },
-      "scale": 0.503955,
-      "flip": false,
-      "zone": "plaza",
-      "sortY": 2904,
-      "shadow": false
-    },
-    {
       "id": "notice-board",
       "name": "Event notice board",
       "src": "centre/notice-board.svg",
@@ -18194,28 +18122,6 @@
       "scale": 0.1758,
       "flip": false,
       "zone": "islets"
-    },
-    {
-      "id": "campfire-flame",
-      "name": "Campfire flame",
-      "src": "centre/fire-flame.svg",
-      "x": 4000,
-      "y": 2496.08968405,
-      "width": 480,
-      "height": 426,
-      "anchor": {
-        "x": 0.5,
-        "y": 0.555
-      },
-      "scale": 0.8467450000000001,
-      "flip": false,
-      "zone": "plaza",
-      "sortY": 2653.1,
-      "shadow": false,
-      "animate": {
-        "kind": "fire",
-        "amplitude": 0.045
-      }
     },
     {
       "id": "polish-tree-1",

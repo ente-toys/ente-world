@@ -56,11 +56,11 @@ test('open furniture sides draw local and remote ducks in front, without changin
  assert.equal(usesFurnitureDepth('snow'),false);assert.equal(usesFurnitureDepth('bog-arena'),false);
 });
 
-test('Campfire stone basin blocks walking while its front approach is reachable',async()=>{
+test('Campfire plaza centre is open ground after the hearth was removed',async()=>{
  await prepareIslandMap('isle-250');const m=mapOf('isle-250'),n=m.nav();
- assert.ok(m.walk.obstacles.some(o=>o.prop==='campfire'&&!o.bodyBlock),'visible stone base retained');
- assert.equal(n.walkable(4000,2600),false,'fire basin is solid');
- await assertReachable('isle-250',[['front of fire basin',4000,2750]]);
+ assert.ok(!m.walk.obstacles.some(o=>['campfire','log-west','log-east','log-south'].includes(o.prop)),'no hearth or log obstacles');
+ assert.equal(n.walkable(4000,2600),true,'plaza centre is walkable');
+ await assertReachable('isle-250',[['plaza centre',4000,2600]]);
 });
 test('home formerly padded 0 approach is reachable',()=>assertReachable('home',[['open approach',2534.78125,2540.40625]]));
 test('isle-251 formerly padded lib-front-01 approach is reachable',()=>assertReachable('isle-251',[['open approach',2825.43515625,2885.1140625]]));

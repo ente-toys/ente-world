@@ -68,13 +68,10 @@ export async function attachCentreMotion(art, objects) {
       dancer.height*=cut;dancer.anchor={x:s.anchor.x,y:anchorY};
     }
   }
-  const records=art.props.filter(p=>p.centrePiece?.animate && !['pour','fire'].includes(p.centrePiece.animate.kind)
+  const records=art.props.filter(p=>p.centrePiece?.animate && p.centrePiece.animate.kind!=='pour'
     && !(art.id==='library' && p.centrePiece.animate.kind==='jet'))
     .map(p=>({piece:p.centrePiece,sprite:p.sprite,flip:p.flip}));
-  let fire=null,pond=null;
-  if(art.id==='community') {
-    fire=(await import('./centre-motion/community.js')).updateCommunityCentre;
-  }
+  let pond=null;
   if(art.id==='library') {
     pond=(await import('./centre-motion/library.js')).createLibraryFountain(art,objects);
     for(const root of pond?.roots??[]) {
@@ -82,7 +79,7 @@ export async function attachCentreMotion(art, objects) {
       if(root.parent===objects)art.groups.push(root);
     }
   }
-  art.updateCentre=(t,reduced)=>{animatePieces(records,t,reduced);fire?.(art,t,reduced);pond?.update(t,reduced,art.ground.visible);};
+  art.updateCentre=(t,reduced)=>{animatePieces(records,t,reduced);pond?.update(t,reduced,art.ground.visible);};
   const destroy=art.destroy.bind(art);
   art.destroy=()=>{pond?.destroy();destroy();textureViews.forEach(t=>t.destroy(false));};
 }

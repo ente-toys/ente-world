@@ -7,7 +7,6 @@ import {animatePieces,attachCentreMotion} from '../src/rendering/pixi/environmen
 import {createGroundPool} from '../src/rendering/pixi/art/ground-stream.js';
 import {loadThemeArt} from '../src/rendering/pixi/art/theme-art.js';
 import {mapFor,readyThemes,THEME_OF} from '../src/world/island-maps.js';
-import {updateCommunityCentre} from '../src/rendering/pixi/environment/centre-motion/community.js';
 const json=p=>JSON.parse(readFileSync(p));
 
 test('all six theme manifests load, release textures and resolve their authored animation pieces', async t=>{
@@ -17,7 +16,7 @@ test('all six theme manifests load, release textures and resolve their authored 
  const original=globalThis.fetch;
  globalThis.fetch=async url=>({ok:true,json:async()=>json('public'+url)});
  try {
-  const animated={sunflower:2,pink:2,library:4,community:1};
+  const animated={sunflower:2,pink:2,library:4};
   assert.equal(readyThemes().length,6);assert.equal(THEME_OF.size,6);
   for(const theme of readyThemes()) {
    let acquired=0,released=0;
@@ -47,13 +46,4 @@ test('centre motion keeps authored pivots fixed and restores a stable reduced-mo
   animatePieces([record],4,true);assert.deepEqual(state(),rest,kind+' resets');
   animatePieces([record],40,true);assert.deepEqual(state(),rest,kind+' remains still');sprite.destroy();
  }
-});
-
-test('community fire animates and stays attached',()=>{
- const a=json('public/pixi-art/themes/community/art.json');
- const props=['campfire','campfire-flame'].map(id=>{const p=a.props.find(p=>p.id===id),sprite=new Sprite(Texture.EMPTY);sprite.position.set(p.x,p.y);sprite.width=p.width*p.scale;sprite.height=p.height*p.scale/.78;return {...p,sprite};});
- const art={id:'community',props};updateCommunityCentre(art,.2);const y=props[1].sprite.scale.y;updateCommunityCentre(art,.8);assert.notEqual(props[1].sprite.scale.y,y);
- updateCommunityCentre(art,1,true);assert.equal(props[1].sprite.y,props[0].sprite.y+(props[1].anchor.y-props[0].anchor.y)*props[0].sprite.height);
- const still=props[1].sprite.scale.y;updateCommunityCentre(art,99,true);assert.equal(props[1].sprite.scale.y,still);
- for(const p of props)p.sprite.destroy();
 });
