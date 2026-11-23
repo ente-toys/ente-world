@@ -635,7 +635,7 @@ export class PixiIsland {
   focusHarbor() {
     const {pier}=harborOf(this.islandId);
     Object.assign(this.target,{x:pier.x+pier.width/2,y:pier.y+pier.height/2,zoom:.65});
-    this.follow=false; this.fitMode=false;
+    this.follow=false; this.fitMode=false; this.refollow=false;
     this.canvas?.focus();
   }
 
@@ -697,6 +697,8 @@ export class PixiIsland {
         }
         this.gust = clamp(movement.dx * .005, -.5, .5);
       } else return;
+      // A finger drag or pinch frees the camera only for a while: phones have no F, so it comes back on its own.
+      if (event.pointerType === 'touch' && this.follow && this.player) this.refollow = true;
       this.follow = false;
       this.fitMode=false;
       if (this.birdEye || movement.after.length > 1) this.constrain(this.target);
@@ -705,6 +707,7 @@ export class PixiIsland {
     const up = (event, cancelled) => {
       if (!cancelled) this.gestures.move(event.pointerId, point(event));
       const tap = this.gestures.up(event.pointerId, cancelled);
+      this.touchUpAt = performance.now();
       if (cancelled || performance.now()-this.dragAt > 80) this.spin=null;
       if (this.canvas.hasPointerCapture(event.pointerId)) this.canvas.releasePointerCapture(event.pointerId);
       if (tap) this.tap(tap);
@@ -753,7 +756,7 @@ export class PixiIsland {
       if (/^[1-7]$/.test(key)) this.triggerEmote(key === '1' ? 2 : Number(key) + 2);
       if (key === 'm') this.audio.toggle();
       // F switches follow camera on and off; it never changes your zoom.
-      if (key === 'f' && this.player) {this.follow=!this.follow;this.fitMode=false;}
+      if (key === 'f' && this.player) {this.follow=!this.follow;this.fitMode=false;this.refollow=false;}
       if (key === 'home') {if (this.player) this.flyHome(); else this.fit();}
       if (key === '0') this.fit();
       if (['+','=','-'].includes(key)) {
@@ -773,6 +776,11 @@ export class PixiIsland {
     });
   }
 
+  // The phone thumb stick: an 8-way direction plus run. Moving it puts the camera back on your Ducky.
+  stick(x, y, run) {
+    this.touchInput={x,y,run};
+    if ((x || y) && this.player && !this.globeOpen) {this.follow=true; this.fitMode=false;}
+  }
   stopInput() {
     this.keys.clear();
     this.touchInput={x:0,y:0};
@@ -942,6 +950,7 @@ export class PixiIsland {
     } else {
       this.lastTap = -Infinity;
       this.setDestination(p);
+      if (this.refollow) {this.follow = true; this.fitMode = false;}   // tap to walk after a finger drag: the camera goes with the Ducky again
     }
   }
 
@@ -1766,6 +1775,7 @@ export class PixiIsland {
     if(this.player&&!this.worldArtPending&&(this.player.mode==='sailing'||isletUnder(this.islandId,this.player)||
       isletAt(this.islandId,this.camera.x,this.camera.y,Math.max(this.width,this.height)/Math.max(this.camera.zoom,.05))))this.ensureWorldArt();
     if (this.keys.has('shift') && ['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].some(k => this.keys.has(k)) && (input.x || input.y)) input.run=true;
+    if (this.touchInput.run && (input.x || input.y)) input.run=true;
     if (this.travelView?.fx.holding(this.room?.id)) input.x=input.y=0;
     const indoors = this.interior?.active;
     while (this.accumulator >= SIM_STEP) {
@@ -1808,6 +1818,9 @@ export class PixiIsland {
       const x=this.width/2+(player.x-this.camera.x)*this.camera.zoom,y=this.height/2+(player.y-this.camera.y)*this.camera.zoom*TILT;
       if(x<80||x>this.width-80||y<70||y>this.height-70)this.follow=true;
     }
+    // After a finger drag freed the camera, 3 s with no finger down glides it back onto your Ducky.
+    if (this.refollow && !this.follow && player && !this.fitMode && !this.birdEye && !this.globeOpen && !this.fly && !this.gestures.pointers.size && performance.now() - (this.touchUpAt ?? 0) > 3000) this.follow = true;
+    if (this.follow) this.refollow = false;
     if (this.follow && player) {
       const shown=this.playerView();
       Object.assign(this.target, {x:shown.x, y:shown.y-90});

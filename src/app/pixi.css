@@ -4,7 +4,9 @@
 .pixi-top-left {
   position: fixed;
   z-index: 1;
-  top: max(16px, env(safe-area-inset-top));
+  /* one top row: logo, help, music pill (40 tall) and the 56px avatar all share the avatar's centre line */
+  top: calc(max(16px, env(safe-area-inset-top)) + 8px);
+  height: 40px;
   left: max(16px, env(safe-area-inset-left));
   display: flex;
   align-items: center;
@@ -12,9 +14,10 @@
   pointer-events: none;
 }
 .pixi-ente-logo {
-  width: 76px;
-  height: auto;
-  padding: 10px 12px;
+  box-sizing: border-box;
+  width: auto;
+  height: 40px;
+  padding: 11px 12px;
   background: #332b23;
   border: 1px solid #564537;
   border-radius: 12px;
@@ -147,8 +150,11 @@
 }
 .pixi-live button:disabled { opacity: .65; cursor: default; }
 @media (max-width: 480px) {
-  .pixi-ente-logo { width: 60px; }
-  .pixi-live { max-width: calc(100vw - 128px); }
+  .pixi-ente-logo { padding: 13px 9px; }   /* same 40px row height, about the old 60px phone width */
+  /* phones: one full-width row under the top bar, message left, action right */
+  .pixi-page:not(.pixi-page--watch) .pixi-live { left: max(16px, env(safe-area-inset-left)); max-width: none; flex-wrap: nowrap; justify-content: space-between; gap: 12px; padding: 6px 6px 6px 14px; }
+  .pixi-live [role="status"] { flex: 1; min-width: 0; text-wrap: pretty; }
+  .pixi-live :is(button, a) { flex-shrink: 0; white-space: nowrap; }
   .pixi-page--watch .pixi-live { max-width: calc(100vw - max(16px, env(safe-area-inset-left)) - max(16px, env(safe-area-inset-right)) - 120px); }
 }
 .pixi-live :is(button, a):focus-visible { outline: 2px solid #564537; outline-offset: 2px; }
@@ -1086,3 +1092,43 @@ a.pixi-guest-signin:active { translate: -50% 5px; box-shadow: none; }
   .pixi-page:has(.pixi-guest-signin) { --pixi-hud-bottom: calc(max(16px, env(safe-area-inset-bottom)) + 68px); }
   .pixi-guest-signin { min-height: 52px; font-size: 20px; }
 }
+
+/* Phone walking control: thumb stick bottom right; Camera + Chat bottom left. */
+/* phones keep the island clear: no minimap (its Bog water-gun button lives inside it) and no Online badge */
+.pixi-page:has(.pixi-stick) :is(.pixi-world-map, .pixi-online) { display: none; }
+.pixi-page:has(.pixi-stick) :is(.pixi-presence-dock, .pixi-presence-dock > .pixi-camera, .pixi-chat-dock) { bottom: var(--pixi-hud-bottom); }
+.pixi-page:has(.pixi-stick) .pixi-watch-island { bottom: calc(var(--pixi-hud-bottom) + 52px); }
+.pixi-stick {
+  position: fixed;
+  z-index: 5;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: var(--pixi-hud-bottom);
+  display: grid;
+  place-items: center;
+  width: 128px;
+  height: 128px;
+  box-sizing: border-box;
+  border: 3px solid #332b23;
+  border-radius: 50%;
+  background: #fff9dfcc;
+  box-shadow: 0 4px 0 #332b23;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  pointer-events: auto;
+}
+.pixi-stick-knob {
+  width: 56px;
+  height: 56px;
+  box-sizing: border-box;
+  border: 3px solid #332b23;
+  border-radius: 50%;
+  background: #ffda69;
+  box-shadow: 0 3px 0 #332b23;
+  transition: translate 200ms cubic-bezier(.23,1,.32,1), background-color 120ms ease;
+}
+.pixi-stick-knob[data-moving] { transition: background-color 120ms ease; }
+.pixi-stick[data-run] .pixi-stick-knob { background: #ffb23f; }
+.pixi-page:has(.bog-combat-dock, .bog-combat-hud, .pixi-stargaze[open]) .pixi-stick { display: none; }
+@media (prefers-reduced-motion: reduce) { .pixi-stick-knob { transition: none; } }
