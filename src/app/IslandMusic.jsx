@@ -61,8 +61,9 @@ export default function IslandMusic({island}) {
       for (const hud of bounds) {
         const player = element.getBoundingClientRect();
         if (hud.left >= player.right || hud.right <= player.left || hud.top >= player.bottom || hud.bottom <= player.top) continue;
-        if (hud.left-player.width-12 >= leftDockRight+12) {
-          element.style.right = `${window.innerWidth-hud.left+12}px`;
+        // 8px between top-row items, the same gap as the logo and help button
+        if (hud.left-player.width-8 >= leftDockRight+8) {
+          element.style.right = `${window.innerWidth-hud.left+8}px`;
         } else {
           element.style.right = '';
           element.style.marginTop = `${(parseFloat(element.style.marginTop)||0)+hud.bottom-player.top+12}px`;

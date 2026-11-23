@@ -151,6 +151,13 @@
 .pixi-live button:disabled { opacity: .65; cursor: default; }
 @media (max-width: 480px) {
   .pixi-ente-logo { padding: 13px 9px; }   /* same 40px row height, about the old 60px phone width */
+  /* signed in, the feather counter shares the top row: drop the decorative music bars and tighten the counter so both fit */
+  .pixi-music-spectrum { display: none; }
+  .pixi-music { padding: 0 2px; gap: 0; }
+  .pixi-music-status > [aria-hidden] { display: none; }   /* screen readers still hear it; the play button turns rust instead */
+  .pixi-music:has(.pixi-music-status[data-tone="error"]) .pixi-music-play { color: #a2431f; }
+  .pixi-karma-counter { right: calc(max(16px, env(safe-area-inset-right)) + 64px) !important; padding: 6px 10px !important; gap: 4px !important; font-size: 15px !important; }
+  .pixi-karma-counter img { width: 20px !important; height: 20px !important; }
   /* phones: one full-width row under the top bar, message left, action right */
   .pixi-page:not(.pixi-page--watch) .pixi-live { left: max(16px, env(safe-area-inset-left)); max-width: none; flex-wrap: nowrap; justify-content: space-between; gap: 12px; padding: 6px 6px 6px 14px; }
   .pixi-live [role="status"] { flex: 1; min-width: 0; text-wrap: pretty; }
