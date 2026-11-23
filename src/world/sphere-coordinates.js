@@ -28,7 +28,9 @@ export function seaPoint(id,p){
  for(const pole of POLE_ISLANDS){
   const c=FLAT_POSITIONS[pole],m=mapOf(pole),image=nearestSeaImage(c.x,c.y,q,0);
   const dx=q.x-image.x,dy=(q.y-image.y)*image.flip;
-  const distance=Math.max(Math.abs(dx)/(m.width/2),Math.abs(dy)/(m.height/2));
+  // measured to the map's nearer edge: Iceland's map runs further north, to hold the sled hill island
+  const halfHeight=Math.min(m.cy-m.origin.y,m.origin.y+m.height-m.cy);
+  const distance=Math.max(Math.abs(dx)/(m.width/2),Math.abs(dy)/halfHeight);
   // Keep the blend close to the island so detached islet pins use the sea chart.
   if(distance>=1.2)continue;
   const art=spherePoint(pole,{x:m.cx+dx,y:m.cy+dy});

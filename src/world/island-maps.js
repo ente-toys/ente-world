@@ -71,13 +71,15 @@ else if (harbor.boats?.length) moorings = harbor.boats.map(({x, y}) => ({x, y}))
     waterNear??=shapeIndex(boatWater,0);
     return waterNear(x,y).some(w=>x>w.x0&&x<w.x1&&y>w.y0&&y<w.y1&&inPoly(x,y,w.poly));
   };
-  const solidDecks=walkways.filter(w=>!w.boatPassUnder).map(({a,b,w})=>({a,b,w,dx:b[0]-a[0],dy:b[1]-a[1],l2:(b[0]-a[0])**2+(b[1]-a[1])**2,x0:Math.min(a[0],b[0])-w/2,x1:Math.max(a[0],b[0])+w/2,y0:Math.min(a[1],b[1])-w/2,y1:Math.max(a[1],b[1])+w/2}));
-  function landAt(x, y) {
+  const solidDecks=walkways.filter(w=>!w.boatPassUnder).map(({a,b,w,addedLand})=>({a,b,w,addedLand,dx:b[0]-a[0],dy:b[1]-a[1],l2:(b[0]-a[0])**2+(b[1]-a[1])**2,x0:Math.min(a[0],b[0])-w/2,x1:Math.max(a[0],b[0])+w/2,y0:Math.min(a[1],b[1])-w/2,y1:Math.max(a[1],b[1])+w/2}));
+  // addedLand: land added past an island's authored shore (the sled hill). Its harbour and coast moorings ignore it.
+  function landAt(x, y, addedLand = true) {
     if (x < (world.origin?.x ?? 0) - 600 || y < (world.origin?.y ?? 0) - 600 || x > (world.origin?.x ?? 0) + W + 600 || y > (world.origin?.y ?? 0) + H + 600) return false;
     if (onJetty(x, y, 4) || coastContains(x,y) && !riverAt(x,y)) return true;
     if (islets.some(([cx, cy, rx, ry]) => inShape(x, y, {x: cx, y: cy, rx, ry}))) return true;
-    return solidDecks.some(({a,w,dx,dy,l2,x0,x1,y0,y1})=>{
-      if(x<x0||x>x1||y<y0||y>y1)return false;
+    if (addedLand && (world.solidLand ?? []).some(poly => inPoly(x, y, poly))) return true;
+    return solidDecks.some(({a,w,addedLand:added,dx,dy,l2,x0,x1,y0,y1})=>{
+      if((added&&!addedLand)||x<x0||x>x1||y<y0||y>y1)return false;
       const t=Math.max(0,Math.min(1,((x-a[0])*dx+(y-a[1])*dy)/l2));
       return Math.hypot(x-a[0]-t*dx,y-a[1]-t*dy)<w/2;
     });
@@ -169,11 +171,11 @@ else if (harbor.boats?.length) moorings = harbor.boats.map(({x, y}) => ({x, y}))
     for(const deg of order){
       const a=deg*Math.PI/180;
       // Come in from the open sea, so inner lakes and rivers are never mistaken for the coast.
-      const o=world.origin??{x:0,y:0},edge=Math.min(...[[Math.cos(a),c.x,o.x,o.x+W],[Math.sin(a),c.y,o.y,o.y+H]]
+      const o=world.origin??{x:0,y:0},hi={x:o.x+W,y:o.y+H},lo=world.centre?{x:2*world.centre.x-hi.x,y:2*world.centre.y-hi.y}:o,edge=Math.min(...[[Math.cos(a),c.x,lo.x,hi.x],[Math.sin(a),c.y,lo.y,hi.y]]
         .map(([d,p,lo,hi])=>Math.abs(d)<1e-6?Infinity:((d>0?hi:lo)-p)/d))-200;
       for(let r=edge;r>300;r-=20){
         const x=c.x+Math.cos(a)*r,y=c.y+Math.sin(a)*r;
-        if(!landAt(x,y))continue;
+        if(!landAt(x,y,false))continue;
         const bx=Math.round(x+Math.cos(a)*145),by=Math.round(y+Math.sin(a)*145);
         if(Math.hypot(bx-HARBOR.water.x,by-HARBOR.water.y)>PORT_CLEAR*2 && [...port,...coast].every(o=>Math.hypot(o.x-bx,o.y-by)>COAST_SPREAD) &&
           !nav().walkable(bx,by) && localWet(bx,by) && shoreFor(bx,by,200))coast.push({x:bx,y:by,turn:Math.cos(a)<0?-Math.PI/2:Math.PI/2});
@@ -218,7 +220,8 @@ else if (harbor.boats?.length) moorings = harbor.boats.map(({x, y}) => ({x, y}))
   }
   const field = () => finishWork(fieldSteps());
   const spawn = harbor.spawn ?? world.zones?.plaza?.spawn ?? [W / 2, H / 2];
-  return {id, width: W, height: H, origin: world.origin ?? {x:0,y:0}, cx:(world.origin?.x ?? 0)+W/2, cy:(world.origin?.y ?? 0)+H/2, get world(){buildWalking();return world;}, get walk(){buildWalking();return walkMap;}, get baseWalk(){buildWalking();return baseWalk;}, get sleepers(){buildWalking();return beds;}, JETTY, HARBOR, spawn: {x: spawn[0], y: spawn[1]}, landAt, nav, shoreFor, boatSpots, field, fieldSteps, get cachedField(){return fieldValue;},
+  // a map that grew on one side keeps its old centre (world.centre), so its island stays put in the sea
+  return {id, width: W, height: H, origin: world.origin ?? {x:0,y:0}, cx:world.centre?.x ?? (world.origin?.x ?? 0)+W/2, cy:world.centre?.y ?? (world.origin?.y ?? 0)+H/2, get world(){buildWalking();return world;}, get walk(){buildWalking();return walkMap;}, get baseWalk(){buildWalking();return baseWalk;}, get sleepers(){buildWalking();return beds;}, JETTY, HARBOR, spawn: {x: spawn[0], y: spawn[1]}, landAt, nav, shoreFor, boatSpots, field, fieldSteps, get cachedField(){return fieldValue;},
     art, sea, home: id === 'home', centre: centre ?? coastCentre(walking.coast)};
 }
 

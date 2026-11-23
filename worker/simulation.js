@@ -7,6 +7,7 @@ import {ISLANDS, boatHome, harborOf, islandFor, near, parkFleetBoat, placeFleetB
 import {KARMA_RADIUS} from '../src/gameplay/karma-pool.js';
 import {mapOf} from '../src/world/island-maps.js';
 import {BOG_ISLAND} from '../src/features/bog-combat/entry.js';
+import {SLED_ISLAND} from '../src/features/sled-race/rules.js';
 
 const fail = (status = 409) => new Response(null, {status});
 const ok = () => new Response(null, {status: 204});
@@ -830,11 +831,11 @@ class LocalSimulation extends IslandRoom {
         return this.updateSession(data.path, data);
       });
     }
-    if (!['/room', '/bog-room'].includes(url.pathname)) return fail(404);
+    if (!['/room', '/bog-room', '/sled-room'].includes(url.pathname)) return fail(404);
     const digest = request.headers.get('X-Session-Digest');
     const admission = await this.control('admit', {
       digest,
-      play: url.searchParams.get('play') === '1' || url.pathname === '/bog-room',
+      play: url.searchParams.get('play') === '1' || url.pathname === '/bog-room' || url.pathname === '/sled-room',
       watch: url.searchParams.get('watch'),
     });
     if (!admission.ok) return admission;
@@ -873,6 +874,7 @@ class LocalSimulation extends IslandRoom {
     )
       return fail();
     if (url.pathname === '/bog-room' && owner !== BOG_ISLAND) return fail(403);
+    if (url.pathname === '/sled-room' && owner !== SLED_ISLAND) return fail(403);
     const headers = new Headers(request.headers);
     headers.delete('X-Initial-Spawn');
     if (!user) headers.delete('X-Session-Digest');
