@@ -165,6 +165,11 @@ export default function IslandMusic({island}) {
     <div className="pixi-music-spectrum" ref={spectrum} role="img" aria-label="Live music frequency spectrum">
       {Array.from({length:12},(_,i) => <span key={i}/>)}
     </div>
+    {/* status sits inside the pill, in place of the bars, so it never covers the live card under it */}
+    <span className="pixi-music-status" role="status" data-tone={state === 'error' ? 'error' : undefined}>
+      {state === 'error' ? <><span aria-hidden="true">No music</span><span className="pixi-sr">Could not load music. Press Play to retry.</span></>
+        : state === 'loading' ? <><span aria-hidden="true">Loading…</span><span className="pixi-sr">Loading music</span></> : null}
+    </span>
     <details className="pixi-music-options" onToggle={event => {
       // the pill can sit left of the other buttons; keep the open panel on screen
       const menu = event.currentTarget.querySelector('.pixi-music-menu');
@@ -205,7 +210,6 @@ export default function IslandMusic({island}) {
         <a href="https://music.ente.com/" target="_blank" rel="noreferrer">More on Ente Music <span aria-hidden="true">↗</span></a>
       </div>
     </details>
-    <span className="pixi-music-status" role="status">{state === 'error' ? 'Could not load music. Press Play to retry.' : state === 'loading' ? 'Loading music…' : ''}</span>
     <audio ref={audio} src={trackUrl(defaultTrack)} loop={track === defaultTrack} crossOrigin="anonymous" preload="none"
       onEnded={track === defaultTrack ? undefined : () => choose(track+1)} onError={() => {request.current++;setState('error');}}
       onWaiting={() => {if(!audio.current.paused)setState('loading');}}

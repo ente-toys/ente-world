@@ -12,6 +12,7 @@ import IslandTravel from './IslandTravel.jsx';
 import IslandStargaze from './IslandStargaze.jsx';
 import IslandProfile from './IslandProfile.jsx';
 import IslandCamera from './IslandCamera.jsx';
+import IslandStick from './IslandStick.jsx';
 import IslandGuide from './IslandGuide.jsx';
 import IslandMusic from './IslandMusic.jsx';
 import WorldMap from './WorldMap.jsx';
@@ -242,6 +243,7 @@ export default function PixiPage({signedInEntry = false}) {
         </IslandPresence>
       </div>
     </div>}
+    {!error && <IslandStick island={island} show={(status === 'playing' || offline) && travel.mode !== 'sailing' && !globeOpen}/>}
     {!error && <WorldMap island={island} globeOpen={globeOpen} indoors={indoors}/>}
     {!error && <BogEntry engine={island} travel={travel} status={status} {...BOG_COMBAT}
       accountId={session?.user?.accountId}

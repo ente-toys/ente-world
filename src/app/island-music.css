@@ -82,8 +82,9 @@
 .pixi-music-menu a:hover { color: #332b23; text-decoration: underline; text-underline-offset: 3px; }
 
 .pixi-music-status:empty { display: none; }
-.pixi-music-status { position: absolute; top: calc(100% + 12px); right: 0; width: 230px; padding: 8px 12px; background: #fff9df; border: 1px solid #564537; border-radius: 12px; pointer-events: none; }
-.pixi-music-options[open] ~ .pixi-music-status { display: none; }
+.pixi-music-status { margin: 0 2px; color: #735c37; font: 600 11px/1 system-ui, sans-serif; white-space: nowrap; pointer-events: none; }
+.pixi-music-status[data-tone="error"] { color: #a2431f; }
+.pixi-music:has(.pixi-music-status:not(:empty)) .pixi-music-spectrum { display: none; }
 .pixi-music :is(button,summary,input,a):focus-visible { outline: 2px solid #564537; outline-offset: 3px; }
 @media (pointer: coarse) {
   .pixi-music :is(button,summary) { min-width: 40px; min-height: 40px; }
