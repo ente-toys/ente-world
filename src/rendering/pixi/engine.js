@@ -50,6 +50,7 @@ import {createKarmaView} from './karma-view.js';
 import {isletUnder} from '../../gameplay/boat-build.js';
 import {HARBOR, harborOf, islandFor, near, seaBoundsFor, destinationsFor, offshoreProgress, boardingPoint, dockingSpot, canDock, islandOffset} from '../../gameplay/islands.js';
 import {atTeleporter, TELEPORTERS, TELEPORT_COST} from '../../gameplay/teleport.js';
+import {atDoor as atMysteryDoor, DOORS, DOOR_RADIUS} from '../../gameplay/doors.js';
 import {isletWalks,isletAt} from '../../world/islet-walk.js';
 import {reframeIslet} from '../../world/islet-placement.js';
 import {ambientOf, artOf, mapFor, mapOf, prepareIslandMap, islandMapReady} from '../../world/island-maps.js';
@@ -110,9 +111,12 @@ function contactShadow(prop) {
 const acquireGround = (src, resolution) => acquire(src, resolution, {mipmaps: false});
 
 export class PixiIsland {
-  constructor({onError = () => {}, onInteriorChange = () => {}, room = null, chatLayer = null, chatEditor = null, nameLayer = null, transparent = false, renderResolution, randomArrival = false, onArrival = () => {}, onGlobeChange = () => {}, onPhotoReady, onTeleport} = {}) {
+  constructor({onError = () => {}, onInteriorChange = () => {}, room = null, chatLayer = null, chatEditor = null, nameLayer = null, transparent = false, renderResolution, randomArrival = false, onArrival = () => {}, onGlobeChange = () => {}, onPhotoReady, onTeleport, onDoor} = {}) {
     this.onPhotoReady = onPhotoReady;
     this.onTeleport = onTeleport;
+    this.onDoor = onDoor;
+    this.doorTrip = null;
+    this.mysteryArmed = false;
     this.onGlobeChange = onGlobeChange; this.globeOpen = false;
     this.transparent=transparent;this.renderResolution=renderResolution;
     this.onInteriorChange = onInteriorChange;
@@ -922,6 +926,9 @@ export class PixiIsland {
       }
       const boat=this.room.boatPoses().find(boat => near(p,{x:boat.x,y:boat.y-45},100));
       if (boat) {this.room.board(boat.id); this.follow=true; this.fitMode=false; return;}
+      // a tap on a door's house walks the Ducky to its doorstep (the step is not always straight below the door)
+      const door = DOORS.get(this.room.islandId);
+      if (door && p.y < door.y + 20 && p.y > door.y - 650 && Math.abs(p.x - door.x) < 220) {this.setDestination(door); return;}
     }
     if (this.artShown === 'home') this.waterFX?.splash(p.x, p.y, .65, 24);
     const hitRadius=Math.max(65,20/this.camera.zoom), me = this.player;
@@ -964,6 +971,53 @@ export class PixiIsland {
     if (!this.arrival || this.motion.matches) return 0;
     const t = Math.min(1,(now - (this.arrival.start ?? now)) / 520);
     return 220 * (1 - t * t);
+  }
+
+  // Mystery door (rough): the doorstep swallows the Ducky, the screen goes dark, the server drops it at another
+  // island's door, and the dark lifts only once that island is drawn and walkable. It then steps out of the house.
+  updateMysteryDoor(player, indoors) {
+    const now = performance.now(), trip = this.doorTrip;
+    // step out of the house: keep asking until the walk is accepted (the first frames on a new island can refuse it)
+    const walk = this.doorWalkOut;
+    if (walk && player) {
+      if (now > walk.until || Math.hypot(player.x-walk.out.x, player.y-walk.out.y) < 20 || player.path?.length) this.doorWalkOut = null;
+      else this.room?.destination(walk.out.x, walk.out.y);
+    }
+    if (trip) {
+      this.stopInput();
+      const moved = this.room?.islandId !== trip.from;
+      const loaded = moved && this.islandId === this.room.islandId && islandMapReady(this.islandId) && this.artReady(this.artShown);
+      if (loaded) trip.loadedAt ??= now;
+      if (moved) trip.movedAt ??= now;
+      // a beat after the art is in so its own fade-in finishes under the dark; never keep the screen dark past 8 s
+      const ready = (loaded && now - trip.loadedAt > 350) || (moved && now - trip.movedAt > 8000);
+      if (ready && now - trip.start > 450) {
+        this.doorTrip = null; this.mysteryArmed = false;
+        const door = DOORS.get(this.islandId);
+        if (door && player) {
+          Object.assign(this.target, {x: player.x, y: player.y - 90}); Object.assign(this.camera, this.target, {zoom: this.camera.zoom});
+          this.doorWalkOut = {out: door.out, until: now + 1500};
+        }
+        this.follow = true; this.fitMode = false;
+        this.onDoor?.(false, islandFor(this.islandId)?.name);
+      } else if (!moved && ((this.room?.noticeAt ?? 0) > trip.start || now - trip.start > 6000)) {   // the server said no: open the eyes again
+        this.doorTrip = null; this.mysteryArmed = false;
+        this.onDoor?.(false);
+      }
+      return;
+    }
+    if (!this.room || !player || player.mode !== 'walking' || indoors || this.arrival || this.globeBusy()) return;
+    const here = {...player, islandId: this.room.islandId}, door = DOORS.get(here.islandId);
+    if (!door) return;
+    if (!atMysteryDoor(here, -14)) {
+      if (Math.hypot(player.x-door.x, player.y-door.y) > DOOR_RADIUS + 60) this.mysteryArmed = true;
+      return;
+    }
+    if (!this.mysteryArmed || !this.room.door()) return;
+    this.doorTrip = {from: this.room.islandId, start: now};
+    this.stopInput();
+    this.audio.play('pop', .06);
+    this.onDoor?.(true);
   }
 
   setDestination(point) {
@@ -1779,8 +1833,8 @@ export class PixiIsland {
     if (this.travelView?.fx.holding(this.room?.id)) input.x=input.y=0;
     const indoors = this.interior?.active;
     while (this.accumulator >= SIM_STEP) {
-      this.sim.step(SIM_STEP, this.room || indoors || this.arrival ? ZERO : input);
-      this.room?.step(SIM_STEP, indoors || this.arrival ? ZERO : input);
+      this.sim.step(SIM_STEP, this.room || indoors || this.arrival || this.doorTrip ? ZERO : input);
+      this.room?.step(SIM_STEP, indoors || this.arrival || this.doorTrip ? ZERO : input);
       this.accumulator -= SIM_STEP;
     }
     this.room?.setAlpha(this.accumulator * 60);
@@ -1798,6 +1852,7 @@ export class PixiIsland {
     }
     const t = this.sim.time + this.accumulator;
     const reduced = this.motion.matches;
+    this.updateMysteryDoor(player, indoors);
     if (player && player.mode !== 'sailing' && this.artShown === 'home' && mapOf(this.islandId).home && Math.hypot(player.x-MUSEUM_DOOR.x, player.y-MUSEUM_DOOR.y) < 700) this.ensureInterior();
     if (player && player.mode !== 'sailing') {
       const atDoor = this.artShown === 'home' && mapOf(this.islandId).home && atMuseumDoor(player.x, player.y);

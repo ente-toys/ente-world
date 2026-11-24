@@ -63,6 +63,7 @@ export default function PixiPage({signedInEntry = false}) {
   const [signingOut, setSigningOut] = useState(false);
   const [starDialogOpen, setStarDialogOpen] = useState(true);
   const [indoors,setIndoors] = useState(false);
+  const [doorDark,setDoorDark] = useState(false);
   const [globeOpen,setGlobeOpen] = useState(false);
   const [notificationHost,setNotificationHost] = useState(null);
   const params = new URLSearchParams(location.search);
@@ -126,7 +127,10 @@ export default function PixiPage({signedInEntry = false}) {
       onError:() => setError(true), onInteriorChange:setIndoors, onGlobeChange:open => {
         setGlobeOpen(open);
         if (!offline) client.setGlobeOpen(open);
-      }, onPhotoReady:()=>setCameraReady(true), onTeleport:setTeleportSource});
+      }, onPhotoReady:()=>setCameraReady(true), onTeleport:setTeleportSource, onDoor:(dark, name) => {
+        setDoorDark(dark);
+        if (name) {setArrival(`Came out in ${name}`); clearTimeout(arrivalTimer); arrivalTimer = setTimeout(() => setArrival(''), 4000);}
+      }});
     island.current = game;
     // the island's art is in once its canvas says ready (mount resolves earlier, while the art still streams in)
     const drawnPoll = setInterval(() => {if (host.current?.querySelector('canvas[data-state="ready"]')) {clearInterval(drawnPoll); finishHomeHeadStart(); requestAnimationFrame(() => setWorldDrawn(true));}}, 150);
@@ -244,6 +248,7 @@ export default function PixiPage({signedInEntry = false}) {
       </div>
     </div>}
     {!error && <IslandStick island={island} show={(status === 'playing' || offline) && travel.mode !== 'sailing' && !globeOpen}/>}
+    <div className="pixi-door-dark" data-dark={doorDark || undefined} aria-hidden="true"/>
     {!error && <WorldMap island={island} globeOpen={globeOpen} indoors={indoors}/>}
     {!error && <BogEntry engine={island} travel={travel} status={status} {...BOG_COMBAT}
       accountId={session?.user?.accountId}

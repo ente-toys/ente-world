@@ -522,7 +522,7 @@ class LocalSimulation extends IslandRoom {
     return ok();
   }
 
-  transferIfNeeded(socket, info, previousBoat, before, teleportFare = 0) {
+  transferIfNeeded(socket, info, previousBoat, before, teleportFare = 0, door = false) {
     const actor = info.actor;
     const destination = actor.mode === 'sailing' ? 'sea' : actor.islandId;
     if (destination === this.simulation.owner) return false;
@@ -542,6 +542,7 @@ class LocalSimulation extends IslandRoom {
       before,
       chargeBog: info.chargeBog === true,
       ...(teleportFare && {teleportFare}),
+      ...(door && {door}),
       ack: info.ack,
     };
     info.chargeBog = false;

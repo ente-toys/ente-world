@@ -5,6 +5,7 @@ import {presenceStub, simulationStub, internalPost} from '../server/simulation-r
 import {islandFor, near} from '../src/gameplay/islands.js';
 import {BOG_ISLAND} from '../src/features/bog-combat/entry.js';
 import {TELEPORTERS, teleportPrice} from '../src/gameplay/teleport.js';
+import {DOORS} from '../src/gameplay/doors.js';
 import {randomOutfit} from '../src/gameplay/outfits.js';
 import {pickSpawnIsland} from '../src/gameplay/world-spawn.js';
 import {FRIEND_RADIUS} from '../src/multiplayer/friends.js';
@@ -332,6 +333,8 @@ export class WorldService extends LegacyRoom {
       if (data.teleportFare) {
         if (!TELEPORTERS.has(owner) || !TELEPORTERS.has(data.destination) ||
             data.teleportFare !== teleportPrice(data.destination)) return fail(400);
+      } else if (data.door) {
+        if (!DOORS.has(owner) || !DOORS.has(data.destination) || owner === data.destination) return fail(400);
       } else if (
         ((owner === 'sea') === (data.destination === 'sea') && owner !== BOG_ISLAND) ||
         (data.destination !== 'sea' && !islandFor(data.destination))

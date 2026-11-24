@@ -226,7 +226,7 @@ export class RoomClient {
         this.feathers=this.feathers.filter(f=>f.id!==message.id);
         this.onKarmaPickup(message);
       }
-      if (message.type === 'travel-notice') this.onNotice(message.text);
+      if (message.type === 'travel-notice') {this.noticeAt = performance.now(); this.onNotice(message.text);}
       if (message.type === 'boat-built') {
         // the new boat stays hidden until the build smoke covers its spot
         this.unveil = {id: message.boatId, at: nowSeconds() + BOAT_UNVEIL};
@@ -536,6 +536,9 @@ export class RoomClient {
   board(boatId) { return this.send({type:'board',boatId}); }
   teleport(destination) {
     return this.send({type:'teleport',destination}) ? this.seq : null;
+  }
+  door() {
+    return this.player?.mode === 'walking' && this.send({type:'door'}) ? this.seq : null;
   }
 
   // free boats this player may take: built boats belong to whoever built them
