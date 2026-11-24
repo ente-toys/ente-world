@@ -1139,3 +1139,7 @@ a.pixi-guest-signin:active { translate: -50% 5px; box-shadow: none; }
 .pixi-stick[data-run] .pixi-stick-knob { background: #ffb23f; }
 .pixi-page:has(.bog-combat-dock, .bog-combat-hud, .pixi-stargaze[open]) .pixi-stick { display: none; }
 @media (prefers-reduced-motion: reduce) { .pixi-stick-knob { transition: none; } }
+
+/* Mystery door: the screen goes dark while the Ducky is between two houses */
+.pixi-door-dark { position: fixed; inset: 0; z-index: 4; background: #1d1610; opacity: 0; pointer-events: none; transition: opacity 380ms cubic-bezier(.23,1,.32,1); }
+.pixi-door-dark[data-dark] { opacity: 1; pointer-events: auto; transition-duration: 260ms; transition-timing-function: cubic-bezier(.4,0,1,1); }

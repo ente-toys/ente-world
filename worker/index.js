@@ -16,6 +16,7 @@ import {randomOutfit, validOutfit} from '../src/gameplay/outfits.js';
 import {pickSpawnIsland,pickWorldSpawn} from '../src/gameplay/world-spawn.js';
 import {RoomKarma} from './karma.js';
 import {atTeleporter, TELEPORTERS, teleportPrice} from '../src/gameplay/teleport.js';
+import {atDoor, DOOR_SLACK, DOORS, pickDoor} from '../src/gameplay/doors.js';
 
 const STARGAZER_LIMIT = 5000;
 const TEST_LOGIN = /^test-[0-9a-f]{8}$/;
@@ -143,6 +144,35 @@ export class IslandRoom {
     Object.assign(actor,arrival,{karma:balance});
     Object.assign(info,{islandId:destination,boarding:null,landing:null,input:ZERO,inputExpires:0,throttled:null});
     if (this.simulation) this.transferIfNeeded(socket,info,null,before,fare);
+    return null;
+  }
+  // Mystery door: free, and the server picks the island so a client can't use it as a free teleporter to anywhere.
+  door(socket, info, command) {
+    const {actor, account} = info;
+    if (!account || command.islandId !== actor.islandId || !atDoor(actor,DOOR_SLACK)) return 'Walk up to the door first.';
+    const destination = pickDoor(actor.islandId), door = DOORS.get(destination);
+    if (!door) return 'The door is stuck.';
+    const arrival = {islandId:destination,...door.exit,mode:'walking',turn:0,
+      boatId:null,path:[],travel:0,pace:0,heading:null,sailTarget:null,sailRoute:null,
+      dockTarget:null,docking:false,exitLocked:false,ice:null,jumpLeft:0,action:0,until:0};
+    if (!this.standable(arrival)) return 'The door is stuck.';
+    const before = this.simulation && {actor:structuredClone(actor)};
+    if (!this.simulation) {
+      const pose = JSON.stringify(savedPose({...actor,...arrival}));
+      try {
+        this.ctx.storage.transactionSync(() => {
+          this.sql.exec('INSERT OR REPLACE INTO room_checkpoints VALUES(?,?,?)',account,info.digest,pose);
+          this.sql.exec('DELETE FROM resumes WHERE account=?',account);
+        });
+      } catch (error) {
+        console.error('Door transaction failed',error);
+        return 'The door is stuck. Try again.';
+      }
+      this.savedCheckpointRows.set(account,{digest:info.digest,pose});
+    }
+    Object.assign(actor,arrival);
+    Object.assign(info,{islandId:destination,boarding:null,landing:null,input:ZERO,inputExpires:0,throttled:null});
+    if (this.simulation) this.transferIfNeeded(socket,info,null,before,0,true);
     return null;
   }
   constructor(ctx, bindings, simulation = null, inactiveWorld = false) {
@@ -1113,9 +1143,9 @@ export class IslandRoom {
     }
     if (!command || !Number.isSafeInteger(command.seq) || command.seq <= Math.max(info.ack, info.throttled?.seq ?? 0)) return;
     const actor = info.actor;
-    if (command.type === 'teleport') {
+    if (command.type === 'teleport' || command.type === 'door') {
       info.ack = command.seq;
-      const notice = this.teleport(socket,info,command);
+      const notice = command.type === 'door' ? this.door(socket,info,command) : this.teleport(socket,info,command);
       this.attach(socket,info);
       if (notice) this.send(socket,{type:'travel-notice',text:notice});
       this.broadcast();
